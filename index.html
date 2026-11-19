@@ -170,7 +170,9 @@ form{display:grid;gap:16px;background:var(--card);border:1px solid var(--line);b
 label{display:grid;gap:6px;font-weight:700;font-size:14px}
 input,select,textarea{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);font-weight:400;font-size:16px}
 textarea{resize:vertical}
-.status{margin:0;font-size:14.5px;color:var(--mute)}.status a{color:var(--accent);font-weight:700}
+.status{margin:0;font-size:14.5px;color:var(--mute)}.status:empty{display:none}
+button.btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+.sent{padding:18px 4px;outline:none}.sent h3{font-size:22px;margin-bottom:8px}.sent p{margin:0;color:var(--mute)}.status a{color:var(--accent);font-weight:700}
 
 /* coverflow */
 .cf{perspective:1700px;perspective-origin:50% 45%;overflow:hidden;border:1px solid var(--line);border-radius:30px;background:linear-gradient(180deg,var(--panel),color-mix(in srgb,var(--glow) 55%,var(--panel)));box-shadow:var(--shadow);outline-offset:4px;touch-action:pan-y;cursor:grab}
@@ -336,6 +338,7 @@ const IMG={"dental": ["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const W3F_KEY="59b1c823-b80b-4fad-9a1e-f1dfe391493d"; /* Web3Forms access key (public by design) */
 const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
 const ic=p=>`<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const src=(id,i)=>IMG[id]&&IMG[id][i]?IMG[id][i]:"";
@@ -511,7 +514,7 @@ const V={
   <form id="cf"><label>Your name<input name="n" required autocomplete="name"></label><label>Your email<input name="e" type="email" required autocomplete="email"></label>
   <label>Service interested in<select name="s">${opts.map(o=>`<option${o===pendingSvc?" selected":""}>${esc(o)}</option>`).join("")}</select></label>
   <label>Project details<textarea name="m" rows="6" required placeholder="What does your business do, and what would you like to automate or build?"></textarea></label>
-  <button class="btn" type="submit">Prepare my message</button><p class="status" id="cfs" role="status"></p></form></div>`}
+  <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none"><button class="btn" type="submit">Send message</button><p class="status" id="cfs" role="status"></p></form></div>`}
 };
 let pendingSvc="";
 
@@ -563,11 +566,23 @@ function route(){
   const tl=$("#tl");if("IntersectionObserver"in window){const io=new IntersectionObserver(e=>{if(e[0].isIntersecting){tl.classList.add("in");io.disconnect()}},{threshold:.25});io.observe(tl)}else tl.classList.add("in");
  }
  const cf=$("#cf");
- if(cf)cf.onsubmit=async e=>{e.preventDefault();const f=new FormData(cf);
+ if(cf)cf.onsubmit=async e=>{e.preventDefault();const f=new FormData(cf),st=$("#cfs"),btn=cf.querySelector('button[type="submit"]');
+  if(f.get("botcheck"))return;
   const msg=`Name: ${f.get("n")}\nEmail: ${f.get("e")}\nService interested in: ${f.get("s")}\nProject details: ${f.get("m")}`;
-  let copied=false;try{await navigator.clipboard.writeText(msg);copied=true}catch(_){}
-  const href=`mailto:${C.email}?subject=${encodeURIComponent("Project inquiry from "+f.get("n"))}&body=${encodeURIComponent(msg)}`;
-  $("#cfs").innerHTML=`${copied?"Your message is copied. ":""}Send it to <b>${esc(C.email)}</b>, or <a href="${href}">open it in your email app</a>.`;
+  const mailto=`mailto:${C.email}?subject=${encodeURIComponent("Project inquiry from "+f.get("n"))}&body=${encodeURIComponent(msg)}`;
+  btn.disabled=true;btn.textContent="Sending...";st.textContent="";
+  try{
+   const res=await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},
+    body:JSON.stringify({access_key:W3F_KEY,subject:`New portfolio inquiry from ${f.get("n")}`,from_name:"Portfolio contact form",
+     name:f.get("n"),email:f.get("e"),service:f.get("s"),message:f.get("m"),botcheck:""})});
+   const out=await res.json().catch(()=>({}));
+   if(!res.ok||!out.success)throw new Error(out.message||"Send failed");
+   cf.innerHTML=`<div class="sent" role="status" tabindex="-1"><span class="sico">${ic('<path d="M20 6 9 17l-5-5"/>')}</span><h3>Thanks, ${esc(f.get("n"))}! Your message is on its way.</h3><p>I'll get back to you at <b>${esc(f.get("e"))}</b> within 24 hours.</p></div>`;
+   cf.querySelector(".sent").focus();
+  }catch(err){
+   btn.disabled=false;btn.textContent="Send message";
+   st.innerHTML=`Sorry, something went wrong and your message wasn't sent. Please try again, or <a href="${mailto}">email me directly</a>.`;
+  }
  };
 }
 addEventListener("hashchange",route);route();
