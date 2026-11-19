@@ -160,10 +160,10 @@ a.card{text-decoration:none;display:block}
 .nextp small{display:block;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.nextp b{font-size:20px}
 
 /* about / contact */
-.about{display:grid;gap:44px;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}
-.photo{aspect-ratio:1/1;max-width:460px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
+.aboutwrap{display:grid;gap:48px;grid-template-columns:minmax(220px,380px) minmax(0,1fr);align-items:start;margin-top:30px}
+.photo{aspect-ratio:1/1;width:100%;max-width:380px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
 .photo img{width:100%;height:100%;object-fit:cover}
-.about p{margin:0 0 16px;font-size:17px}
+.aboutwrap .txt{max-width:64ch}.aboutwrap .txt p{margin:0 0 18px;font-size:17px;line-height:1.7}.aboutwrap .txt p:last-child{margin-bottom:0}
 .cwrap{display:grid;gap:40px;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);align-items:start}
 .cinfo dl{margin:0;display:grid;gap:18px}.cinfo dt{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}.cinfo dd{margin:2px 0 0;font-size:18px;font-weight:600;overflow-wrap:anywhere}
 form{display:grid;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px}
@@ -208,7 +208,7 @@ textarea{resize:vertical}
  .top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:15;padding:12px 18px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
  .top button{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 16px;cursor:pointer;font-weight:600}
  main{margin-left:0;padding:28px 18px 70px}
- .p6,.p12{grid-column:1/-1}.row{grid-template-columns:1fr;gap:6px}.about,.cwrap,.cols{grid-template-columns:1fr}.cta{padding:32px 24px}
+ .p6,.p12{grid-column:1/-1}.row{grid-template-columns:1fr;gap:6px}.aboutwrap,.cwrap,.cols{grid-template-columns:1fr}.aboutwrap{gap:28px;margin-top:22px}.photo{max-width:300px}.cta{padding:32px 24px}
  .journey{flex-direction:column;align-items:stretch;padding:18px}.jn{white-space:normal}.jl{flex:none;width:2px;min-width:0;height:18px;margin-left:24px}.jl::after{transform:scaleY(0);transform-origin:top;animation-name:filly}
  .thumbs{gap:8px}
 }
@@ -407,8 +407,8 @@ const V={
   <section class="sec"><p class="eyebrow">Services</p><h2>Four services that work together.</h2><div class="grid" style="margin-top:22px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">${C.services.map((v,i)=>`<a class="card" href="#services"><span class="sico">${ic(sico[i])}</span><h3>${esc(v.id)}</h3><p>${esc(v.s)}</p></a>`).join("")}</div></section>
   <section class="sec"><p class="eyebrow">My work</p><h2>Five funnels, from first click to follow-up.</h2><div class="cfmount" style="margin-top:22px"></div></section>
   ${whyBlock()}${ctaBlock()}`},
- about(){return `<p class="eyebrow">About me</p><h1>Who I am.</h1><p class="sub"></p>
-  <div class="about"><div class="photo">${C.photo?`<img src="${esc(C.photoFull||C.photo)}" alt="${esc(C.name)}">`:esc(initials)}</div><div>${C.about.map(p=>`<p>${esc(p)}</p>`).join("")}</div></div>
+ about(){return `<p class="eyebrow">About me</p><h1>Who I am.</h1>
+  <div class="aboutwrap"><div class="photo">${C.photo?`<img src="${esc(C.photoFull||C.photo)}" alt="${esc(C.name)}">`:esc(initials)}</div><div class="txt">${C.about.map(p=>`<p>${esc(p)}</p>`).join("")}</div></div>
   ${whyBlock()}${ctaBlock()}`},
  services(){return `<p class="eyebrow">Services</p><h1>What I can build for you.</h1><p class="sub">Four service areas. Choose one, or combine them so your marketing, communication and operations all work together.</p>${svcCards()}${ctaBlock()}`},
  projects(){
