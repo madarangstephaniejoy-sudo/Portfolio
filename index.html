@@ -708,7 +708,6 @@ const V={
   <div class="journey" role="img" aria-label="Customer journey: ${esc(C.journey.join(", "))}">${j}</div>
   <p class="jcap">One customer journey, automated end to end.</p>
   <section class="sec"><p class="eyebrow">Services</p><h2>Four services that work together.</h2><div class="grid" style="margin-top:22px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">${C.services.map((v,i)=>`<a class="card" href="#services"><span class="sico">${ic(sico[i])}</span><h3>${esc(v.id)}</h3><p>${esc(v.s)}</p></a>`).join("")}</div></section>
-  <section class="sec"><p class="eyebrow">My work</p><h2>Six funnels, from first click to follow-up.</h2><div class="cfmount" style="margin-top:22px"></div></section>
   ${whyBlock()}${ctaBlock()}`},
  about(){return `<p class="eyebrow">About me</p><h1>Who I am.</h1>
   <div class="aboutwrap"><div class="photo">${C.photo?`<img src="${esc(C.photoFull||C.photo)}" alt="${esc(C.name)}">`:esc(initials)}</div><div class="txt">${C.about.map(p=>`<p>${esc(p)}</p>`).join("")}${C.tools&&C.tools.length?`<div class="tools"><h3>Tools I use</h3><div class="chips">${C.tools.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div></div>`:""}</div></div>
