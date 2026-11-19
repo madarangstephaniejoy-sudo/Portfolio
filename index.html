@@ -593,12 +593,27 @@ const WF=[
 function wfFolder(){
  const n=WF.length,mid=(n-1)/2;
  const docs=WF.map((w,i)=>{const o=i-mid;return `<button type="button" class="fdoc" data-wf="${i}" tabindex="-1" style="--o:${o};--a:${Math.abs(o)};--k:${i}" aria-label="View workflow: ${esc(w.t)}"><img src="workflows/${w.f}-sm.jpg" alt="" loading="lazy"><span><b>${String(i+1).padStart(2,"0")}</b>${esc(w.s)}</span></button>`}).join("");
- return `<div class="wfone"><div class="fold" id="fold" tabindex="0" aria-label="Automation workflows folder. Press Enter to open it."><span class="fback"></span>${docs}<span class="ffront"><b>GoHighLevel</b><i>Automation workflows</i><small>${n} workflows inside &middot; hover or tap to open</small></span></div>
+ return `<div class="wfone"><div class="fold" tabindex="0" aria-label="Automation workflows folder. Press Enter to open it."><span class="fback"></span>${docs}<span class="ffront"><b>GoHighLevel</b><i>Automation workflows</i><small>${n} workflows inside &middot; hover or tap to open</small></span></div>
  <div><p class="wfhint">Open the folder and click any workflow to see it in full, or pick one here:</p><ol class="wflist">${WF.map((w,i)=>`<li><button type="button" data-wf="${i}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(w.t)}</strong><small>Trigger: ${esc(w.trig)}</small></span></button></li>`).join("")}</ol></div></div>`;
 }
 function openWf(i){const w=WF[i];openModal(`<div class="wfv"><img src="workflows/${w.f}.png" alt="GoHighLevel workflow builder showing the ${esc(w.t)} automation"><div class="wfx"><p class="eyebrow">GHL workflow</p><h3>${esc(w.t)}</h3><p><b>Trigger:</b> ${esc(w.trig)}</p><p>${esc(w.d)}</p><ol>${w.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div></div>`)}
+/* email templates (screenshots live in /emails), shown in the same opening folder */
+const EM=[
+ {f:"elevate-welcome",s:"Elevate",t:"Welcome Email",b:"Elevate Coaching",k:"Welcome / onboarding",d:"A warm welcome for new subscribers: who the coaches are, what subscribers can expect, a quote from the lead coach, and two calls to action to explore services or book a free discovery call."},
+ {f:"haven-listings",s:"Haven Realty",t:"Curated Listings Email",b:"Haven Realty",k:"Property newsletter",d:"A personalised weekly listings email with three featured homes, each with beds, baths, size, price and a View Property button, plus a Schedule a Private Viewing block and agent card."},
+ {f:"freshnest-quote",s:"FreshNest",t:"Quote Follow-Up Email",b:"FreshNest Cleaning Co.",k:"Quote / sales follow-up",d:"Delivers a custom cleaning quote with a clear price summary, trust points, a limited-time 15% discount to drive booking, a customer review and a personal sign-off."},
+ {f:"brightsmile-reminder",s:"BrightSmile",t:"Appointment Reminder",b:"BrightSmile Dental Clinic",k:"Appointment reminder",d:"Reminds patients of their visit with merge-field appointment details, Add to Google Calendar and Outlook buttons, reschedule and cancel links, prep tips and a note from the dentist."},
+ {f:"dermacare-reminder",s:"DermaCare",t:"Appointment Reminder",b:"DermaCare Skin Clinic",k:"Appointment reminder",d:"A calm, premium reminder with appointment details, an Add to Google Calendar button, reschedule and cancel links, how-to-prepare tips and direct call and email contacts."}
+];
+function emFolder(){
+ const n=EM.length,mid=(n-1)/2;
+ const docs=EM.map((m,i)=>{const o=i-mid;return `<button type="button" class="fdoc" data-em="${i}" tabindex="-1" style="--o:${o};--a:${Math.abs(o)};--k:${i}" aria-label="View email: ${esc(m.b)} ${esc(m.t)}"><img src="emails/${m.f}-sm.jpg" alt="" loading="lazy"><span><b>${String(i+1).padStart(2,"0")}</b>${esc(m.s)}</span></button>`}).join("");
+ return `<div class="wfone"><div class="fold" tabindex="0" aria-label="Email templates folder. Press Enter to open it."><span class="fback"></span>${docs}<span class="ffront"><b>GoHighLevel</b><i>Email templates</i><small>${n} emails inside &middot; hover or tap to open</small></span></div>
+ <div><p class="wfhint">Open the folder and click any email to see the full design, or pick one here:</p><ol class="wflist">${EM.map((m,i)=>`<li><button type="button" data-em="${i}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(m.b)}: ${esc(m.t)}</strong><small>${esc(m.k)}</small></span></button></li>`).join("")}</ol></div></div>`;
+}
+function openEm(i){const m=EM[i];openModal(`<div class="wfv"><img src="emails/${m.f}.jpg" alt="Full email design: ${esc(m.b)} ${esc(m.t)}"><div class="wfx"><p class="eyebrow">${esc(m.k)}</p><h3>${esc(m.b)}: ${esc(m.t)}</h3><p>${esc(m.d)}</p><p>Built with GoHighLevel merge fields such as {{contact.first_name}}, so every email is personalised automatically.</p></div></div>`)}
 document.addEventListener("click",e=>{
- const d=e.target.closest(".fdoc,.wflist button");if(d){openWf(+d.dataset.wf);return}
+ const d=e.target.closest(".fdoc,.wflist button");if(d){d.dataset.em!==undefined?openEm(+d.dataset.em):openWf(+d.dataset.wf);return}
  const f=e.target.closest(".fold");if(f)setFold(f,!f.classList.contains("open"));
 });
 function setFold(f,on){f.classList.toggle("open",on);f.querySelectorAll(".fdoc").forEach(d=>d.tabIndex=on?0:-1)}
@@ -702,6 +717,7 @@ const V={
   <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2>
   <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>
   <section class="sec"><p class="eyebrow">Automation</p><h2>Automation workflows.</h2><p class="sub">GoHighLevel workflows I built to capture leads, confirm bookings, recover no-shows and win reviews. Open the folder to see every workflow.</p>${wfFolder()}</section>
+  <section class="sec"><p class="eyebrow">Email marketing</p><h2>Email templates.</h2><p class="sub">Responsive, personalised emails I designed and built in GoHighLevel: welcome, newsletter, quote follow-up and appointment reminders. Open the folder to see each one in full.</p>${emFolder()}</section>
   <section class="sec"><p class="eyebrow">Social media &amp; design</p><h2>Posts and designs.</h2><p class="sub">Social media posts, flyers and brand graphics I've designed. Click the centre design to view it full size.</p><div class="dfmount"></div></section>
   <section class="sec"><p class="eyebrow">Branding &amp; documents</p><h2>Professional profiles.</h2><p class="sub">Company and professional profile designs for consultants, coaches and healthcare brands. Flip through the stack, then open any profile full size.</p><div class="pfmount"></div></section>${ctaBlock()}`},
  project(id){
