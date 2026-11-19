@@ -194,6 +194,18 @@ textarea{resize:vertical}
 .dots button[aria-current="true"]{background:var(--accent);transform:scale(1.3)}
 .cfhint{text-align:center;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:14px 0 0}
 
+/* designs gallery */
+.posts{columns:3 260px;column-gap:16px;margin-top:8px}
+.post{display:block;width:100%;margin:0 0 16px;padding:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--soft);cursor:zoom-in;break-inside:avoid;transition:transform .3s,border-color .3s,box-shadow .3s}
+.post:hover,.post:focus-visible{transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 50%,var(--line));box-shadow:var(--shadow)}
+.post img{width:100%;height:auto;display:block}
+.pv{margin:0;display:flex;align-items:center;justify-content:center;gap:14px}
+.pv img{max-width:100%;max-height:86vh;width:auto;height:auto;display:block;border-radius:14px;box-shadow:0 30px 60px rgba(0,0,0,.45)}
+.pv button{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:20px;cursor:pointer;transition:background .2s}
+.pv button:hover{background:rgba(255,255,255,.2)}
+.pvc{text-align:center;color:rgba(255,255,255,.7);font-size:13px;font-weight:700;letter-spacing:.1em;margin:12px 0 0}
+@media(max-width:600px){.posts{columns:2;column-gap:10px}.post{margin-bottom:10px;border-radius:12px}.pv{gap:6px}.pv button{width:38px;height:38px}}
+
 /* modal */
 .modal{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:rgba(9,13,24,.84);backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;z-index:60}
 .modal.show{opacity:1;visibility:visible}
@@ -330,6 +342,7 @@ const pages=[
  ["about","About",'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'],
  ["services","Services",'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'],
  ["projects","Projects",'<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'],
+ ["designs","Designs",'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>'],
  ["contact","Contact",'<path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/>']
 ];
 
@@ -347,7 +360,7 @@ $("#side").addEventListener("click",e=>{if(e.target.closest("a"))document.body.c
 /* modal */
 let raf=0,lastFocus=null,reelKey=null;
 const modal=$("#modal");
-function stopReel(){cancelAnimationFrame(raf);reelKey&&removeEventListener("keydown",reelKey);reelKey=null}
+function stopReel(){cancelAnimationFrame(raf);reelKey&&removeEventListener("keydown",reelKey);reelKey=null;postKey&&removeEventListener("keydown",postKey);postKey=null}
 function openModal(html,after){stopReel();$("#mbody").innerHTML=html;if(!modal.classList.contains("show"))lastFocus=document.activeElement;modal.classList.add("show");modal.setAttribute("aria-hidden","false");after&&after();$("#mx").focus()}
 function closeModal(){stopReel();modal.classList.remove("show");modal.setAttribute("aria-hidden","true");lastFocus&&lastFocus.focus&&lastFocus.focus()}
 $("#mx").onclick=closeModal;
@@ -394,6 +407,26 @@ const tile=(p,cls)=>`<a class="tile ${cls}" href="#project-${p.id}"><span class=
 const svcCards=()=>`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))">${C.services.map((s,i)=>`<div class="card svc"><span class="sico">${ic(sico[i])}</span><h3>${esc(s.id)}</h3><p>${esc(s.d)}</p><ul>${s.items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul><a class="btn ghost" href="#contact" data-svc="${esc(s.id)}">Ask about this</a></div>`).join("")}</div>`;
 
 /* pages */
+/* social posts and designs: images live in /posts (thumbnail + full size) */
+const POSTS=[
+  {f:"believe-not-just-a-gym",w:640,h:800,alt:"Social media post for Believe Hybrid Performance Club: Not just a gym"},
+  {f:"regents-finest-cuts",w:640,h:640,alt:"Social media post for Regents Butchery: Discover the finest cuts of beef"},
+  {f:"viesaine-webinar",w:640,h:800,alt:"Webinar promotion post for Viesaine: Lose weight or feel free around food"},
+  {f:"stronger-with-natasha",w:640,h:800,alt:"Instagram post for Stronger with Natasha: Strength starts within"},
+  {f:"finance-post",w:640,h:800,alt:"Finance social media post: Monitor, manage and maximize"},
+  {f:"regents-bbq-flyer",w:636,h:900,alt:"BBQ catering services flyer for Regents Butchery"},
+  {f:"joy-health-beauty",w:636,h:900,alt:"Brand cover design for Joy Health & Beauty"},
+  {f:"design-with-purpose",w:640,h:800,alt:"Social media post: Design with purpose"},
+  {f:"regents-lamb-kafta",w:640,h:640,alt:"Product post for Regents Butchery: Try our lamb kafta"},
+  {f:"elitepath-cover",w:636,h:900,alt:"Brand cover design for ElitePath"}
+];
+function openPost(i){
+ const n=POSTS.length;i=(i+n)%n;const p=POSTS[i];
+ openModal(`<figure class="pv"><button type="button" id="pvp" aria-label="Previous design">&#8592;</button><img src="posts/${p.f}.jpg" alt="${esc(p.alt)}"><button type="button" id="pvn" aria-label="Next design">&#8594;</button></figure><p class="pvc">${i+1} / ${n}</p>`,()=>{
+  $("#pvp").onclick=()=>openPost(i-1);$("#pvn").onclick=()=>openPost(i+1);
+  postKey=e=>{if(e.key==="ArrowLeft")openPost(i-1);if(e.key==="ArrowRight")openPost(i+1)};addEventListener("keydown",postKey)});
+}
+let postKey=null;
 const V={
  home(){
   const j=C.journey.map((n,i)=>`<span class="jn" style="--i:${i}">${esc(n)}</span>${i<C.journey.length-1?`<span class="jl" style="--i:${i}"></span>`:""}`).join("");
@@ -417,6 +450,9 @@ const V={
   <div class="cfmount"></div>
   <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2>
   <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>${ctaBlock()}`},
+ designs(){
+  return `<p class="eyebrow">Social media &amp; design</p><h1>Posts and designs.</h1><p class="sub">Social media posts, flyers and brand graphics I've designed. Click any design to view it full size.</p>
+  <div class="posts">${POSTS.map((p,i)=>`<button type="button" class="post" data-i="${i}" aria-label="View full size: ${esc(p.alt)}"><img src="posts/${p.f}-sm.jpg" alt="${esc(p.alt)}" width="${p.w}" height="${p.h}" loading="lazy"></button>`).join("")}</div>${ctaBlock()}`},
  project(id){
   const P=C.projects,i=P.findIndex(p=>p.id===id),p=P[i],nx=P[(i+1)%P.length];
   return `<a class="backl" href="#projects">Back to projects</a>
@@ -484,6 +520,7 @@ function route(){
  document.querySelectorAll("[data-svc]").forEach(a=>a.addEventListener("click",()=>{pendingSvc=a.dataset.svc}));
  document.querySelectorAll('a[href="#contact"]:not([data-svc])').forEach(a=>a.addEventListener("click",()=>{pendingSvc=""}));
  const cm=document.querySelector(".cfmount");if(cm)coverflow(cm);
+ document.querySelectorAll(".post").forEach(b=>b.onclick=()=>openPost(+b.dataset.i));
  if(page==="home")heroIntro();
  if(page==="project"){
   const p=C.projects.find(x=>x.id===arg),main=$("#main"),cap=$("#cap");let cur=0;
