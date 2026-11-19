@@ -202,16 +202,21 @@ a.card{text-decoration:none;display:block}
 .wfv ol{margin:0;padding-left:20px;color:rgba(255,255,255,.85);line-height:1.6;font-size:14.5px}.wfv li{margin-bottom:6px}
 @media(max-width:820px){.wfv{grid-template-columns:1fr}.wfv .wfx{position:static;order:-1}}
 
-/* professional profiles */
-.pfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:34px 26px;margin-top:26px;perspective:1600px}
-.pfc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:zoom-in}
-.pfbook{position:relative;display:block;width:100%;aspect-ratio:1/1.414;border-radius:4px 10px 10px 4px;overflow:hidden;margin-bottom:12px;transform:rotateY(-14deg);transform-origin:left center;box-shadow:14px 18px 34px rgba(5,10,30,.38),2px 2px 0 rgba(255,255,255,.06);transition:transform .55s cubic-bezier(.2,.8,.2,1),box-shadow .55s}
-.pfbook img{width:100%;height:100%;object-fit:cover;display:block}
-.pfbook:before{content:"";position:absolute;inset:0 auto 0 0;width:14px;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.18) 45%,transparent);z-index:1}
-.pfc:hover .pfbook,.pfc:focus-visible .pfbook{transform:rotateY(0) translateY(-6px);box-shadow:0 26px 50px rgba(5,10,30,.42)}
-.pfc:focus-visible{outline:none}.pfc:focus-visible .pfbook{outline:2px solid var(--accent);outline-offset:4px}
-.pfn{font-weight:800;font-size:16px}.pfk{font-size:13.5px;color:var(--mute)}
-@media(max-width:600px){.pfgrid{grid-template-columns:repeat(2,1fr);gap:24px 16px}.pfbook{transform:none}}
+/* professional profiles: fanned stack */
+.pstack{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:center;margin-top:26px;padding:44px 40px;border:1px solid var(--line);border-radius:30px;background:radial-gradient(ellipse at 30% 50%,color-mix(in srgb,var(--glow) 70%,var(--panel)),var(--panel) 72%);box-shadow:var(--shadow);outline-offset:4px;overflow:hidden}
+.pdeck{position:relative;width:min(300px,62vw);aspect-ratio:1/1.414;margin:10px auto 10px 18%;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.pcard{position:absolute;inset:0;padding:0;border:0;border-radius:12px;overflow:hidden;background:var(--soft);cursor:pointer;box-shadow:0 22px 44px rgba(5,10,30,.4);transform-origin:50% 90%;transition:transform .43s cubic-bezier(.3,.7,.2,1),opacity .43s,filter .43s;will-change:transform}
+.pcard img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.pcard.out{transition:transform .43s cubic-bezier(.4,0,.6,1),opacity .43s}
+.pcard.snap{transition:none}
+.pinfo .eyebrow{margin:0 0 10px}
+.pinfo h3{font-size:clamp(26px,3vw,36px);margin:0 0 6px;letter-spacing:-.02em}
+.pinfo .pk{color:var(--mute);margin:0 0 22px;font-size:16px}
+.pbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pbtns .arrow{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:inherit;cursor:pointer;font-size:18px;transition:border-color .2s,transform .2s}
+.pbtns .arrow:hover{border-color:var(--accent);transform:scale(1.06)}
+.pcount{font-size:13px;font-weight:800;letter-spacing:.12em;color:var(--mute);margin:18px 0 0}
+@media(max-width:820px){.pstack{grid-template-columns:1fr;padding:30px 20px 26px;gap:22px}.pdeck{margin:10px auto 20px;width:min(240px,58vw)}.pinfo{text-align:center}.pbtns{justify-content:center}}
 
 /* about / contact */
 .aboutwrap{display:grid;gap:48px;grid-template-columns:minmax(220px,380px) minmax(0,1fr);align-items:start;margin-top:30px}
@@ -578,8 +583,35 @@ const PROFILES=[
   {f:"joyful-parenting",n:"Joyful Parenting with Dana",k:"Parent coaching"},
   {f:"elitepath",n:"ElitePath",k:"Education"}
 ].map(p=>({...p,alt:`Professional profile cover designed for ${p.n}`,cap:p.n}));
-function profCards(){return PROFILES.map((p,i)=>`<button type="button" class="pfc" data-pf="${i}" aria-label="View full size: ${esc(p.n)} profile"><span class="pfbook"><img src="profiles/${p.f}-sm.jpg" alt="${esc(p.alt)}" width="480" height="679" loading="lazy"></span><span class="pfn">${esc(p.n)}</span><span class="pfk">${esc(p.k)}</span></button>`).join("")}
-document.addEventListener("click",e=>{const c=e.target.closest(".pfc");if(c)openPost(+c.dataset.pf,PROFILES,"profiles","profile")});
+/* fanned stack: the front card slides out to the side (430ms), drops to the back, and the rest move up */
+function profStack(el){
+ const n=PROFILES.length,VIS=4,T=430;let order=PROFILES.map((_,i)=>i),busy=false;
+ el.innerHTML=`<div class="pstack" tabindex="0" role="group" aria-roledescription="carousel" aria-label="Professional profiles. Use the arrow keys to flip through them."><div class="pdeck">${PROFILES.map((p,i)=>`<button type="button" class="pcard" data-i="${i}" tabindex="-1"><img src="profiles/${p.f}-sm.jpg" alt="${esc(p.alt)}" draggable="false"></button>`).join("")}</div>
+ <div class="pinfo" aria-live="polite"><p class="eyebrow">Professional profile</p><h3></h3><p class="pk"></p><div class="pbtns"><button type="button" class="arrow" aria-label="Previous profile">&#8592;</button><button type="button" class="arrow" aria-label="Next profile">&#8594;</button><button type="button" class="btn">View full size</button></div><p class="pcount"></p></div></div>`;
+ const box=el.querySelector(".pstack"),deck=el.querySelector(".pdeck"),cards=[...deck.children],[prev,next,view]=el.querySelectorAll(".pbtns button");
+ const pose=d=>d<VIS?`translate(${d*22}px,${-d*16}px) rotate(${d*4.5}deg) scale(${1-d*.06})`:`translate(${(VIS-1)*22}px,${-(VIS-1)*16}px) rotate(${(VIS-1)*4.5}deg) scale(${1-(VIS-1)*.06})`;
+ const OUT="translate(-112%,-4%) rotate(-12deg)";
+ const lay=()=>{order.forEach((ci,d)=>{const c=cards[ci];c.style.zIndex=n-d;c.style.transform=pose(d);c.style.opacity=d<VIS?1:0;c.style.filter=d?`brightness(${1-d*.12})`:"none";c.setAttribute("aria-hidden",d?"true":"false");c.tabIndex=d?-1:0});
+  const p=PROFILES[order[0]];el.querySelector("h3").textContent=p.n;el.querySelector(".pk").textContent=p.k;el.querySelector(".pcount").textContent=`${order[0]+1} / ${n}`;
+  cards[order[0]].setAttribute("aria-label",`View full size: ${p.n} profile`)};
+ const fwd=()=>{if(busy)return;busy=true;const f=cards[order[0]];
+  f.classList.add("out");f.style.transform=OUT;           /* 1. slide the front card out to the side */
+  order.push(order.shift());                               /* 2. the rest move up at the same time */
+  order.slice(0,-1).forEach((ci,d)=>{const c=cards[ci];c.style.transform=pose(d);c.style.opacity=d<VIS?1:0;c.style.filter=d?`brightness(${1-d*.12})`:"none"});
+  setTimeout(()=>{f.classList.remove("out");f.style.zIndex=0;lay();setTimeout(()=>busy=false,T)},T)};   /* 3. drop it to the back */
+ const back=()=>{if(busy)return;busy=true;const ci=order.pop(),c=cards[ci];order.unshift(ci);
+  c.classList.add("snap");c.style.zIndex=n+1;c.style.opacity=1;c.style.transform=OUT;c.offsetWidth;c.classList.remove("snap");
+  requestAnimationFrame(()=>{lay();c.style.zIndex=n+1;setTimeout(()=>{busy=false;lay()},T)})};
+ const open=()=>openPost(order[0],PROFILES,"profiles","profile");
+ next.onclick=fwd;prev.onclick=back;view.onclick=open;
+ cards.forEach(c=>c.onclick=()=>{if(+c.dataset.i===order[0]&&!swiped)open()});
+ box.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){e.preventDefault();fwd()}else if(e.key==="ArrowLeft"){e.preventDefault();back()}});
+ let sx=null,swiped=false;
+ deck.addEventListener("pointerdown",e=>{sx=e.clientX;swiped=false});
+ deck.addEventListener("pointerup",e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>40){swiped=true;dx<0?back():fwd()}});
+ lay();
+}
+new MutationObserver(()=>{const m=document.querySelector(".pfmount");if(m&&!m.dataset.on){m.dataset.on="1";profStack(m)}}).observe($("#app"),{childList:true});
 
 /* designs coverflow: centre faces forward, side covers turn ~58deg toward it */
 function designFlow(el){
@@ -636,7 +668,7 @@ const V={
   <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>
   <section class="sec"><p class="eyebrow">Automation</p><h2>Automation workflows.</h2><p class="sub">GoHighLevel workflows I built to capture leads, confirm bookings, recover no-shows and win reviews. Click a workflow to see every step.</p><div class="wfgrid">${wfCards()}</div></section>
   <section class="sec"><p class="eyebrow">Social media &amp; design</p><h2>Posts and designs.</h2><p class="sub">Social media posts, flyers and brand graphics I've designed. Click the centre design to view it full size.</p><div class="dfmount"></div></section>
-  <section class="sec"><p class="eyebrow">Branding &amp; documents</p><h2>Professional profiles.</h2><p class="sub">Company and professional profile designs for consultants, coaches and healthcare brands. Click a profile to view it full size.</p><div class="pfgrid">${profCards()}</div></section>${ctaBlock()}`},
+  <section class="sec"><p class="eyebrow">Branding &amp; documents</p><h2>Professional profiles.</h2><p class="sub">Company and professional profile designs for consultants, coaches and healthcare brands. Flip through the stack, then open any profile full size.</p><div class="pfmount"></div></section>${ctaBlock()}`},
  project(id){
   const P=C.projects,i=P.findIndex(p=>p.id===id),p=P[i],nx=P[(i+1)%P.length];
   return `<a class="backl" href="#projects">Back to projects</a>
