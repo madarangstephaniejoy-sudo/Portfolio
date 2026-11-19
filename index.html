@@ -41,6 +41,11 @@ a{color:inherit}button,select,input,textarea{font:inherit;color:inherit}
 .nav a svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .nav a:hover{background:color-mix(in srgb,var(--soft) 60%,transparent);color:var(--ink)}
 .nav a[aria-current="page"]{background:var(--soft);color:var(--ink);font-weight:700}
+/* hover: a small arrow-up-right slides in from the left and nudges the label over */
+.nav a .na{display:inline-flex;flex:none;width:0;margin-right:-14px;opacity:0;transform:translateX(-10px);overflow:hidden;color:var(--accent);transition:width .28s cubic-bezier(.2,.8,.2,1),margin .28s cubic-bezier(.2,.8,.2,1),opacity .2s,transform .28s cubic-bezier(.2,.8,.2,1)}
+.nav a .na svg{width:16px;height:16px;stroke-width:2.2}
+.nav a:hover .na,.nav a:focus-visible .na{width:16px;margin-right:-4px;opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.nav a .na{transition:none}}
 .copy{margin-top:auto;padding-top:20px;color:var(--mute);font-size:13px;border-top:1px solid var(--line)}
 .top{display:none}
 
@@ -422,7 +427,7 @@ const initials=C.name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase(
 $("#avatar").innerHTML=C.photo?`<img src="${esc(C.photo)}" alt="${esc(C.name)}">`:esc(initials);
 $("#slinks").innerHTML=`<a href="${esc(C.whatsapp)}" target="_blank" rel="noopener" aria-label="WhatsApp ${esc(C.phone)}"><span class="bd">WA</span>${esc(C.phone)}</a><a href="${esc(C.linkedin)}" target="_blank" rel="noopener" aria-label="LinkedIn profile"><span class="bd">in</span>LinkedIn profile</a>`;
 $("#sname").textContent=C.name;$("#srole").textContent=C.role;
-$("#nav").innerHTML=pages.map(([k,n,p])=>`<a href="#${k}" data-k="${k}">${ic(p)}${n}</a>`).join("");
+$("#nav").innerHTML=pages.map(([k,n,p])=>`<a href="#${k}" data-k="${k}"><span class="na" aria-hidden="true">${ic('<path d="M7 17 17 7M8 7h9v9"/>')}</span>${ic(p)}${n}</a>`).join("");
 $("#copy").textContent=`© ${new Date().getFullYear()} ${C.name}. All rights reserved.`;
 $("#theme").onclick=()=>{const r=document.documentElement,d=r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);r.dataset.theme=d?"light":"dark"};
 $("#menu").onclick=()=>{const o=document.body.classList.toggle("open");$("#menu").setAttribute("aria-expanded",o)};
