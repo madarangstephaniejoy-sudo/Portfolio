@@ -181,6 +181,27 @@ a.card{text-decoration:none;display:block}
 .pvc{text-align:center;color:rgba(255,255,255,.7);font-size:13px;font-weight:700;letter-spacing:.1em;margin:12px 0 0}
 @media(max-width:600px){.pv{gap:6px}.pv button{width:38px;height:38px}}
 
+/* automation workflows */
+.wfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin-top:22px}
+.wfc{display:flex;flex-direction:column;text-align:left;padding:0;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--card);color:inherit;font:inherit;cursor:pointer;transition:transform .3s,border-color .3s,box-shadow .3s}
+.wfc:hover,.wfc:focus-visible{transform:translateY(-5px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:var(--shadow)}
+.wfimg{position:relative;height:210px;overflow:hidden;background:#f6f7f9;border-bottom:1px solid var(--line)}
+.wfimg img{width:100%;height:auto;display:block;transition:transform 1.6s cubic-bezier(.2,.8,.2,1)}
+.wfc:hover .wfimg img{transform:translateY(-18%)}
+.wfimg:after{content:"";position:absolute;inset:auto 0 0;height:70px;background:linear-gradient(transparent,#f6f7f9)}
+.wfb{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
+.wfmeta{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.wfb h3{margin:0;font-size:19px;letter-spacing:-.01em}
+.wfb p{margin:0;color:var(--mute);font-size:14.5px;line-height:1.6}
+.wftrig{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-top:4px}.wftrig b{flex:none}
+.wfgo{margin-top:auto;padding-top:8px;font-size:14px;font-weight:700;color:var(--accent)}
+.wfv{width:min(1000px,100%);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:28px;align-items:start}
+.wfv img{width:100%;height:auto;display:block;border-radius:16px;background:#f6f7f9}
+.wfv .wfx{position:sticky;top:0}
+.wfv h3{font-size:26px;margin:6px 0 10px}.wfv p{color:rgba(255,255,255,.75);line-height:1.65;margin:0 0 14px}
+.wfv ol{margin:0;padding-left:20px;color:rgba(255,255,255,.85);line-height:1.6;font-size:14.5px}.wfv li{margin-bottom:6px}
+@media(max-width:820px){.wfv{grid-template-columns:1fr}.wfv .wfx{position:static;order:-1}}
+
 /* about / contact */
 .aboutwrap{display:grid;gap:48px;grid-template-columns:minmax(220px,380px) minmax(0,1fr);align-items:start;margin-top:30px}
 .photo{aspect-ratio:1/1;width:100%;max-width:380px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
@@ -515,6 +536,23 @@ function openPost(i){
 }
 let postKey=null;
 
+/* GHL automation workflows (screenshots live in /workflows) */
+const WF=[
+ {f:"lead-capture",t:"New Patient Lead Capture",trig:"Form submitted (Dentist Inquiry)",d:"Turns every website inquiry into a tracked lead and alerts the team right away, so no new patient falls through the cracks.",
+  steps:["Create the contact","Tag as New Patient Lead","Create an opportunity in the pipeline","Send an email notification","Send an SMS notification","Notify the team internally"]},
+ {f:"booking-confirmation",t:"Appointment Booking Confirmation",trig:"Customer booked appointment (BrightSmile Dental calendar)",d:"Confirms every booking by email and SMS, moves the deal forward in the pipeline and lets the front desk know.",
+  steps:["Add the appointment tag","Update the opportunity stage","Send the appointment confirmation email","Send the booking confirmation SMS","Notify the team internally"]},
+ {f:"cancellation-rebooking",t:"Cancellation and Rebooking",trig:"Patient cancels appointment",d:"Acknowledges the cancellation, updates the pipeline, and follows up two days later with a rebooking message if the patient hasn't rebooked.",
+  steps:["Tag the contact and update the pipeline","Send an SMS acknowledging the cancellation","Notify the team internally","Wait 2 days","Check whether the patient has rebooked","If not, send a rebooking SMS"]},
+ {f:"no-show-recovery",t:"No-Show Recovery",trig:"Appointment marked no-show",d:"Recovers missed appointments with a timed SMS and email sequence, then stops automatically as soon as the patient rebooks.",
+  steps:["Tag the contact and update the opportunity","Notify the team internally","Wait 30 minutes, then send a follow-up text and email","Wait 24 hours and check for a rebooking","If rebooked, end the sequence","If not, wait 2 days and send a final SMS and email"]},
+ {f:"review-request",t:"Post-Appointment Follow-Up and Review Request",trig:"Appointment status completed",d:"Thanks patients after their visit by SMS and email, then asks for a review the next day while the experience is fresh.",
+  steps:["Tag the contact and update the pipeline","Wait 3 hours","Send a thank-you SMS and email","Wait 24 hours","Send a review request email"]}
+];
+function wfCards(){return WF.map((w,i)=>`<button type="button" class="wfc" data-wf="${i}" aria-label="View workflow: ${esc(w.t)}"><span class="wfimg"><img src="workflows/${w.f}-sm.jpg" alt="" width="600" height="630" loading="lazy"></span><span class="wfb"><span class="wfmeta">GHL workflow &middot; ${w.steps.length} stages</span><h3>${esc(w.t)}</h3><p>${esc(w.d)}</p><span class="wftrig"><b>Trigger:</b> ${esc(w.trig)}</span><span class="wfgo">View full workflow &rarr;</span></span></button>`).join("")}
+function openWf(i){const w=WF[i];openModal(`<div class="wfv"><img src="workflows/${w.f}.png" alt="GoHighLevel workflow builder showing the ${esc(w.t)} automation"><div class="wfx"><p class="eyebrow">GHL workflow</p><h3>${esc(w.t)}</h3><p><b>Trigger:</b> ${esc(w.trig)}</p><p>${esc(w.d)}</p><ol>${w.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div></div>`)}
+document.addEventListener("click",e=>{const c=e.target.closest(".wfc");if(c)openWf(+c.dataset.wf)});
+
 /* designs coverflow: centre faces forward, side covers turn ~58deg toward it */
 function designFlow(el){
  const n=POSTS.length;let a=0;
@@ -568,6 +606,7 @@ const V={
   <div class="ringmount"></div>
   <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2>
   <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>
+  <section class="sec"><p class="eyebrow">Automation</p><h2>Automation workflows.</h2><p class="sub">GoHighLevel workflows I built to capture leads, confirm bookings, recover no-shows and win reviews. Click a workflow to see every step.</p><div class="wfgrid">${wfCards()}</div></section>
   <section class="sec"><p class="eyebrow">Social media &amp; design</p><h2>Posts and designs.</h2><p class="sub">Social media posts, flyers and brand graphics I've designed. Click the centre design to view it full size.</p><div class="dfmount"></div></section>${ctaBlock()}`},
  project(id){
   const P=C.projects,i=P.findIndex(p=>p.id===id),p=P[i],nx=P[(i+1)%P.length];
