@@ -202,6 +202,17 @@ a.card{text-decoration:none;display:block}
 .wfv ol{margin:0;padding-left:20px;color:rgba(255,255,255,.85);line-height:1.6;font-size:14.5px}.wfv li{margin-bottom:6px}
 @media(max-width:820px){.wfv{grid-template-columns:1fr}.wfv .wfx{position:static;order:-1}}
 
+/* professional profiles */
+.pfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:34px 26px;margin-top:26px;perspective:1600px}
+.pfc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:zoom-in}
+.pfbook{position:relative;display:block;width:100%;aspect-ratio:1/1.414;border-radius:4px 10px 10px 4px;overflow:hidden;margin-bottom:12px;transform:rotateY(-14deg);transform-origin:left center;box-shadow:14px 18px 34px rgba(5,10,30,.38),2px 2px 0 rgba(255,255,255,.06);transition:transform .55s cubic-bezier(.2,.8,.2,1),box-shadow .55s}
+.pfbook img{width:100%;height:100%;object-fit:cover;display:block}
+.pfbook:before{content:"";position:absolute;inset:0 auto 0 0;width:14px;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.18) 45%,transparent);z-index:1}
+.pfc:hover .pfbook,.pfc:focus-visible .pfbook{transform:rotateY(0) translateY(-6px);box-shadow:0 26px 50px rgba(5,10,30,.42)}
+.pfc:focus-visible{outline:none}.pfc:focus-visible .pfbook{outline:2px solid var(--accent);outline-offset:4px}
+.pfn{font-weight:800;font-size:16px}.pfk{font-size:13.5px;color:var(--mute)}
+@media(max-width:600px){.pfgrid{grid-template-columns:repeat(2,1fr);gap:24px 16px}.pfbook{transform:none}}
+
 /* about / contact */
 .aboutwrap{display:grid;gap:48px;grid-template-columns:minmax(220px,380px) minmax(0,1fr);align-items:start;margin-top:30px}
 .photo{aspect-ratio:1/1;width:100%;max-width:380px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
@@ -529,14 +540,13 @@ const POSTS=[
   {f:"regents-bbq-flyer",w:636,h:900,alt:"BBQ catering services flyer for Regents Butchery"},
   {f:"joy-health-beauty",w:636,h:900,alt:"Brand cover design for Joy Health & Beauty"},
   {f:"design-with-purpose",w:640,h:800,alt:"Social media post: Design with purpose"},
-  {f:"regents-lamb-kafta",w:640,h:640,alt:"Product post for Regents Butchery: Try our lamb kafta"},
-  {f:"elitepath-cover",w:636,h:900,alt:"Brand cover design for ElitePath"}
+  {f:"regents-lamb-kafta",w:640,h:640,alt:"Product post for Regents Butchery: Try our lamb kafta"}
 ];
-function openPost(i){
- const n=POSTS.length;i=(i+n)%n;const p=POSTS[i];
- openModal(`<figure class="pv"><button type="button" id="pvp" aria-label="Previous design">&#8592;</button><img src="posts/${p.f}.jpg" alt="${esc(p.alt)}"><button type="button" id="pvn" aria-label="Next design">&#8594;</button></figure><p class="pvc">${i+1} / ${n}</p>`,()=>{
-  $("#pvp").onclick=()=>openPost(i-1);$("#pvn").onclick=()=>openPost(i+1);
-  postKey=e=>{if(e.key==="ArrowLeft")openPost(i-1);if(e.key==="ArrowRight")openPost(i+1)};addEventListener("keydown",postKey)});
+function openPost(i,L=POSTS,dir="posts",label="design"){
+ const n=L.length;i=(i+n)%n;const p=L[i];
+ openModal(`<figure class="pv"><button type="button" id="pvp" aria-label="Previous ${label}">&#8592;</button><img src="${dir}/${p.f}.jpg" alt="${esc(p.alt)}"><button type="button" id="pvn" aria-label="Next ${label}">&#8594;</button></figure><p class="pvc">${p.cap?esc(p.cap)+" &middot; ":""}${i+1} / ${n}</p>`,()=>{
+  $("#pvp").onclick=()=>openPost(i-1,L,dir,label);$("#pvn").onclick=()=>openPost(i+1,L,dir,label);
+  postKey=e=>{if(e.key==="ArrowLeft")openPost(i-1,L,dir,label);if(e.key==="ArrowRight")openPost(i+1,L,dir,label)};addEventListener("keydown",postKey)});
 }
 let postKey=null;
 
@@ -556,6 +566,20 @@ const WF=[
 function wfCards(){return WF.map((w,i)=>`<button type="button" class="wfc" data-wf="${i}" aria-label="View workflow: ${esc(w.t)}"><span class="wfimg"><img src="workflows/${w.f}-sm.jpg" alt="" width="600" height="630" loading="lazy"></span><span class="wfb"><span class="wfmeta">GHL workflow &middot; ${w.steps.length} stages</span><h3>${esc(w.t)}</h3><p>${esc(w.d)}</p><span class="wftrig"><b>Trigger:</b> ${esc(w.trig)}</span><span class="wfgo">View full workflow &rarr;</span></span></button>`).join("")}
 function openWf(i){const w=WF[i];openModal(`<div class="wfv"><img src="workflows/${w.f}.png" alt="GoHighLevel workflow builder showing the ${esc(w.t)} automation"><div class="wfx"><p class="eyebrow">GHL workflow</p><h3>${esc(w.t)}</h3><p><b>Trigger:</b> ${esc(w.trig)}</p><p>${esc(w.d)}</p><ol>${w.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div></div>`)}
 document.addEventListener("click",e=>{const c=e.target.closest(".wfc");if(c)openWf(+c.dataset.wf)});
+
+/* professional profile covers (images live in /profiles) */
+const PROFILES=[
+  {f:"rawad-haddad",n:"Rawad Haddad",k:"Corporate finance & advisory"},
+  {f:"tamara-haydar",n:"Tamara Haydar",k:"Mind & body coach"},
+  {f:"sarah-sabbah",n:"Sarah Sabbah",k:"Mental health counseling"},
+  {f:"khadija",n:"Khadija",k:"Moms coach"},
+  {f:"joanne-nassar",n:"Joanne Nassar",k:"Marketing consultancy"},
+  {f:"wellsynapse",n:"WellSynapse",k:"Healthcare"},
+  {f:"joyful-parenting",n:"Joyful Parenting with Dana",k:"Parent coaching"},
+  {f:"elitepath",n:"ElitePath",k:"Education"}
+].map(p=>({...p,alt:`Professional profile cover designed for ${p.n}`,cap:p.n}));
+function profCards(){return PROFILES.map((p,i)=>`<button type="button" class="pfc" data-pf="${i}" aria-label="View full size: ${esc(p.n)} profile"><span class="pfbook"><img src="profiles/${p.f}-sm.jpg" alt="${esc(p.alt)}" width="480" height="679" loading="lazy"></span><span class="pfn">${esc(p.n)}</span><span class="pfk">${esc(p.k)}</span></button>`).join("")}
+document.addEventListener("click",e=>{const c=e.target.closest(".pfc");if(c)openPost(+c.dataset.pf,PROFILES,"profiles","profile")});
 
 /* designs coverflow: centre faces forward, side covers turn ~58deg toward it */
 function designFlow(el){
@@ -611,7 +635,8 @@ const V={
   <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2>
   <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>
   <section class="sec"><p class="eyebrow">Automation</p><h2>Automation workflows.</h2><p class="sub">GoHighLevel workflows I built to capture leads, confirm bookings, recover no-shows and win reviews. Click a workflow to see every step.</p><div class="wfgrid">${wfCards()}</div></section>
-  <section class="sec"><p class="eyebrow">Social media &amp; design</p><h2>Posts and designs.</h2><p class="sub">Social media posts, flyers and brand graphics I've designed. Click the centre design to view it full size.</p><div class="dfmount"></div></section>${ctaBlock()}`},
+  <section class="sec"><p class="eyebrow">Social media &amp; design</p><h2>Posts and designs.</h2><p class="sub">Social media posts, flyers and brand graphics I've designed. Click the centre design to view it full size.</p><div class="dfmount"></div></section>
+  <section class="sec"><p class="eyebrow">Branding &amp; documents</p><h2>Professional profiles.</h2><p class="sub">Company and professional profile designs for consultants, coaches and healthcare brands. Click a profile to view it full size.</p><div class="pfgrid">${profCards()}</div></section>${ctaBlock()}`},
  project(id){
   const P=C.projects,i=P.findIndex(p=>p.id===id),p=P[i],nx=P[(i+1)%P.length];
   return `<a class="backl" href="#projects">Back to projects</a>
