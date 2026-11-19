@@ -209,6 +209,12 @@ a.card{text-decoration:none;display:block}
 .fold.open .fdoc{pointer-events:auto;transform:translateX(calc(var(--o)*var(--sp,54%))) translateY(calc(-62% + var(--a)*var(--dy,6%))) rotate(calc(var(--o)*var(--rt,7deg)))}
 .fold.open .fdoc:hover,.fold.open .fdoc:focus-visible{transform:translateX(calc(var(--o)*var(--sp,54%))) translateY(calc(-74% + var(--a)*var(--dy,6%))) rotate(calc(var(--o)*var(--rt,7deg))) scale(1.07);box-shadow:0 22px 44px rgba(5,10,30,.45);z-index:3;transition-delay:0s;outline:none}
 .fold.open .fdoc:focus-visible{box-shadow:0 0 0 3px var(--accent),0 22px 44px rgba(5,10,30,.45)}
+/* landscape sheets for website screenshots */
+.fold.wide .fdoc{width:44%;margin-left:-22%;aspect-ratio:1029/700;bottom:14%}
+.fold.wide .fdoc img{height:80%}
+.fold.wide .fdoc span{height:20%}
+.fold.wide.open .fdoc{transform:translateX(calc(var(--o)*var(--sp,54%)*.62)) translateY(calc(-74% + var(--a)*var(--dy,6%))) rotate(calc(var(--o)*var(--rt,7deg)))}
+.fold.wide.open .fdoc:hover,.fold.wide.open .fdoc:focus-visible{transform:translateX(calc(var(--o)*var(--sp,54%)*.62)) translateY(calc(-92% + var(--a)*var(--dy,6%))) rotate(calc(var(--o)*var(--rt,7deg))) scale(1.1)}
 .wflist{margin:0;padding:0;list-style:none;display:grid;gap:8px}
 .wflist button{display:flex;gap:12px;align-items:flex-start;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:border-color .2s,transform .2s}
 .wflist button:hover,.wflist button:focus-visible{border-color:var(--accent);transform:translateX(4px)}
@@ -592,6 +598,12 @@ const WF=[
  {f:"review-request",s:"Review Request",t:"Post-Appointment Follow-Up and Review Request",trig:"Appointment status completed",d:"Thanks patients after their visit by SMS and email, then asks for a review the next day while the experience is fresh.",
   steps:["Tag the contact and update the pipeline","Wait 3 hours","Send a thank-you SMS and email","Wait 24 hours","Send a review request email"]}
 ];
+function pjFolder(){
+ const P=C.projects,n=P.length,mid=(n-1)/2;
+ const docs=P.map((p,i)=>{const o=i-mid;return `<button type="button" class="fdoc" data-pj="${p.id}" tabindex="-1" style="--o:${o};--a:${Math.abs(o)};--k:${i}" aria-label="Open case study: ${esc(p.name)}"><img src="${src(p.id,0)}" alt="" loading="lazy"><span><b>${String(i+1).padStart(2,"0")}</b>${esc(p.client)}</span></button>`}).join("");
+ return `<div class="wfone"><div class="fold wide" tabindex="0" style="${fanVars(n)}" aria-label="Projects folder. Press Enter to open it."><span class="fback"></span>${docs}<span class="ffront"><b>Funnels &amp; automation</b><i>All projects</i><small>${n} projects inside &middot; hover or tap to open</small></span></div>
+ <div><p class="wfhint">Open the folder and click any project to see the full case study, or pick one here:</p><ol class="wflist">${P.map((p,i)=>`<li><button type="button" data-pj="${p.id}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(p.name)}</strong><small>${esc(p.tags.join(" · "))}</small></span></button></li>`).join("")}</ol></div></div>`;
+}
 const fanVars=n=>`--sp:${(216/(n-1)).toFixed(1)}%;--rt:${(28/(n-1)).toFixed(2)}deg;--dy:${(24/(n-1)).toFixed(1)}%`;
 function wfFolder(){
  const n=WF.length,mid=(n-1)/2;
@@ -617,7 +629,7 @@ function emFolder(){
 }
 function openEm(i){const m=EM[i];openModal(`<div class="wfv"><img src="emails/${m.f}.jpg" alt="Full email design: ${esc(m.b)} ${esc(m.t)}"><div class="wfx"><p class="eyebrow">${esc(m.k)}</p><h3>${esc(m.b)}: ${esc(m.t)}</h3><p>${esc(m.d)}</p><p>Built with GoHighLevel merge fields such as {{contact.first_name}}, so every email is personalised automatically.</p></div></div>`)}
 document.addEventListener("click",e=>{
- const d=e.target.closest(".fdoc,.wflist button");if(d){d.dataset.em!==undefined?openEm(+d.dataset.em):openWf(+d.dataset.wf);return}
+ const d=e.target.closest(".fdoc,.wflist button");if(d){if(d.dataset.pj){location.hash="#project-"+d.dataset.pj;return}d.dataset.em!==undefined?openEm(+d.dataset.em):openWf(+d.dataset.wf);return}
  const f=e.target.closest(".fold");if(f)setFold(f,!f.classList.contains("open"));
 });
 function setFold(f,on){f.classList.toggle("open",on);f.querySelectorAll(".fdoc").forEach(d=>d.tabIndex=on?0:-1)}
@@ -717,8 +729,8 @@ const V={
   const P=C.projects;
   return `<p class="eyebrow">My work</p><h1>Funnels and automations you can open.</h1><p class="sub">Spin through every page I built, then click any card to open the full case study.</p>
   <div class="ringmount"></div>
-  <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2>
-  <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>
+  <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2><p class="sub">Every funnel I built, in one folder. Open it and click a project to see the full case study.</p>
+  ${pjFolder()}</section>
   <section class="sec"><p class="eyebrow">Automation</p><h2>Automation workflows.</h2><p class="sub">GoHighLevel workflows I built to capture leads, confirm bookings, recover no-shows and win reviews. Open the folder to see every workflow.</p>${wfFolder()}</section>
   <section class="sec"><p class="eyebrow">Email marketing</p><h2>Email templates.</h2><p class="sub">Responsive, personalised emails I designed and built in GoHighLevel: welcome, newsletter, promotions, quote follow-up and appointment reminders. Open the folder to see each one in full.</p>${emFolder()}</section>
   <section class="sec"><p class="eyebrow">Social media &amp; design</p><h2>Posts and designs.</h2><p class="sub">Social media posts, flyers and brand graphics I've designed. Click the centre design to view it full size.</p><div class="dfmount"></div></section>
