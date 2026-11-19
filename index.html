@@ -50,21 +50,25 @@ a{color:inherit}button,select,input,textarea{font:inherit;color:inherit}
 .top{display:none}
 
 main{margin-left:310px;padding:44px 56px 90px;max-width:1360px}
-.page{animation:pg .5s cubic-bezier(.2,.8,.2,1) both}
-@keyframes pg{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* fade-through page transition: old page fades and shrinks to .97 (150ms), new page scales in from 1.04 (300ms) */
+.page{animation:pgin .3s cubic-bezier(.2,.8,.2,1) backwards;transform-origin:50% 0}
+.page.leave{animation:pgout .15s cubic-bezier(.4,0,1,1) both;pointer-events:none}
+@keyframes pgin{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
+@keyframes pgout{from{opacity:1;transform:none}to{opacity:0;transform:scale(.97)}}
+@media(prefers-reduced-motion:reduce){.page,.page.leave{animation:none}}
 .eyebrow{margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
 h1{font-size:clamp(32px,4.6vw,60px);line-height:1.04;letter-spacing:-.04em;font-weight:800;margin:0 0 14px}
-/* hero headline: each line rises from behind a mask, 120ms apart, soft spring */
+/* hero headline: letters rise from behind a mask 40ms apart (700ms ease-out), hold, then exit upward */
 .hl{visibility:hidden}
 .hl.ready{visibility:visible}
-.hl .ln{display:block;overflow:hidden;padding:.14em 0 .18em;margin:-.14em 0 -.18em}
-.hl .ln>span{display:block;transform:translateY(120%);animation:rise 1.05s cubic-bezier(.22,1.15,.36,1) forwards;animation:rise 1.05s linear(0,.12 4%,.4 10%,.7 17%,.91 25%,1.03 34%,1.05 42%,1.03 51%,1.01 62%,1 75%,1) forwards;animation-delay:calc(var(--i)*120ms)}
-.hl.static .ln>span{animation:none;transform:none}
-@keyframes rise{from{transform:translateY(120%)}to{transform:none}}
+.hl .w{display:inline-block;white-space:nowrap;overflow:hidden;vertical-align:top;padding:.12em .02em .2em;margin:-.12em -.02em -.2em}
+.hl .c{display:inline-block;transform:translateY(118%);will-change:transform}
+.hl.in .c{transform:none;transition:transform .7s cubic-bezier(.16,1,.3,1);transition-delay:calc(var(--i)*40ms)}
+.hl.out .c{transform:translateY(-118%);transition:transform .55s cubic-bezier(.7,0,.84,0);transition-delay:calc(var(--i)*25ms)}
+.hl.static .c{transform:none;transition:none}
 .rv{opacity:0}
 .rv.go{animation:fadein .75s ease-out forwards;animation-delay:var(--d,0ms)}
 @keyframes fadein{to{opacity:1}}
-.page.home{animation:none}
 h2{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.035em;line-height:1.1;margin:0 0 10px}
 h3{letter-spacing:-.02em;margin:0}
 .sub{color:var(--mute);margin:0 0 26px;max-width:62ch}
@@ -704,28 +708,34 @@ const V={
 };
 let pendingSvc="";
 
-/* hero intro: split the headline into its real lines, then reveal */
+/* hero intro: split the headline into letters inside per-word masks, then loop rise -> hold -> exit upward */
 let heroCleanup=null;
 async function heroIntro(){
  const h=$("#hh");if(!h)return;
  const text=h.dataset.t,rv=[...document.querySelectorAll(".rv")];
  await Promise.race([document.fonts?document.fonts.ready:Promise.resolve(),new Promise(r=>setTimeout(r,900))]);
  if($("#hh")!==h)return;                       // navigated away while fonts loaded
- const build=animate=>{
-  h.classList.remove("ready");
-  h.innerHTML=text.split(" ").map(w=>`<span class="m">${esc(w)}</span>`).join(" ");
-  const lines=[];let top=null;
-  h.querySelectorAll(".m").forEach(w=>{if(top===null||Math.abs(w.offsetTop-top)>4){lines.push([]);top=w.offsetTop}lines[lines.length-1].push(w.textContent)});
-  h.innerHTML=lines.map((l,i)=>`<span class="ln"><span style="--i:${i}">${esc(l.join(" "))}</span></span>`).join("");
-  h.classList.toggle("static",!animate);h.classList.add("ready");
-  return lines.length;
+ let k=0;
+ h.setAttribute("aria-label",text);
+ h.innerHTML=text.split(" ").map(w=>`<span class="w" aria-hidden="true">${[...w].map(ch=>`<span class="c" style="--i:${k++}">${esc(ch)}</span>`).join("")}</span>`).join(" ");
+ const N=k,IN=(N-1)*40+700,HOLD=4500,OUT=(N-1)*25+550,GAP=350;
+ h.classList.add("ready");
+ rv.forEach((el,i)=>{el.style.setProperty("--d",(reduce?0:Math.min(IN-500,1600)+i*110)+"ms");el.classList.add("go")});
+ if(reduce){h.classList.add("static");return}
+ let t=0,alive=true;
+ const wait=ms=>new Promise(r=>{t=setTimeout(r,ms)});
+ const loop=async()=>{
+  while(alive){
+   h.offsetWidth;h.classList.add("in");                    // rise in, 40ms apart
+   await wait(IN+HOLD);if(!alive)return;                   // hold
+   h.classList.replace("in","out");                        // exit upward
+   await wait(OUT+GAP);if(!alive)return;
+   h.classList.add("static");h.classList.remove("out");h.offsetWidth;h.classList.remove("static");
+   h.querySelectorAll(".c").forEach(c=>c.style.transform="translateY(118%)");h.offsetWidth;h.querySelectorAll(".c").forEach(c=>c.style.transform="");
+  }
  };
- const n=build(!reduce);
- const base=reduce?0:n*120+450;                 // subcopy starts as the last line settles
- rv.forEach((el,i)=>{el.style.setProperty("--d",(reduce?0:base+i*110)+"ms");el.classList.add("go")});
- let t;const onResize=()=>{clearTimeout(t);t=setTimeout(()=>build(false),200)};
- addEventListener("resize",onResize);
- heroCleanup=()=>{removeEventListener("resize",onResize);clearTimeout(t)};
+ requestAnimationFrame(()=>requestAnimationFrame(loop));
+ heroCleanup=()=>{alive=false;clearTimeout(t)};
 }
 
 /* router */
@@ -771,7 +781,13 @@ function route(){
   }
  };
 }
-addEventListener("hashchange",route);route();
+let navT=0;
+addEventListener("hashchange",()=>{
+ const old=document.querySelector("#app>.page");clearTimeout(navT);
+ if(!old||reduce){route();return}
+ old.classList.add("leave");navT=setTimeout(route,150);
+});
+route();
 </script>
 </body>
 </html>
