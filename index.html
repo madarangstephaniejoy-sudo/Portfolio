@@ -194,6 +194,21 @@ textarea{resize:vertical}
 .dots button[aria-current="true"]{background:var(--accent);transform:scale(1.3)}
 .cfhint{text-align:center;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:14px 0 0}
 
+/* 3D funnel ring */
+.ring{--cw:clamp(150px,23vw,320px);position:relative;overflow:hidden;border:1px solid var(--line);border-radius:30px;background:radial-gradient(ellipse at 50% 40%,color-mix(in srgb,var(--glow) 70%,var(--panel)),var(--panel) 70%);box-shadow:var(--shadow);touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;outline-offset:4px}
+.ring.drag{cursor:grabbing}
+.rstage{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.rc{position:absolute;left:0;top:0;width:var(--cw);aspect-ratio:1029/561;margin:calc(var(--cw)*-561/2058) 0 0 calc(var(--cw)/-2);transform-style:preserve-3d}
+.rf{position:absolute;inset:0;display:block;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--soft);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 18px 40px rgba(5,10,30,.35);text-decoration:none;color:inherit;-webkit-user-drag:none}
+.rf img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;pointer-events:none;-webkit-user-drag:none}
+.rf.bk{transform:rotateY(180deg);filter:brightness(.55) saturate(.8)}
+.rf.fr{transition:border-color .25s,box-shadow .25s}
+.rf.fr:hover,.rf.fr:focus-visible{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent),0 22px 50px rgba(5,10,30,.45)}
+.rtag{position:absolute;left:10px;bottom:10px;padding:6px 10px 7px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:800;line-height:1.15;letter-spacing:-.01em;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:calc(100% - 20px)}
+.rtag small{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:2px}
+.rf.fr:hover .rtag,.rf.fr:focus-visible .rtag{opacity:1;transform:none}
+.rhint{position:absolute;left:0;right:0;bottom:16px;margin:0;text-align:center;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);pointer-events:none}
+
 /* modal */
 .modal{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:rgba(9,13,24,.84);backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;z-index:60}
 .modal.show{opacity:1;visibility:visible}
@@ -386,6 +401,59 @@ function coverflow(el){
  requestAnimationFrame(()=>{layout();info()});
 }
 
+/* 3D funnel ring: two staggered rows of screenshots on a slowly turning cylinder */
+let ringCleanup=null;
+function funnelRing(el){
+ const P=C.projects,cards=[];
+ P.forEach(p=>p.imgs.forEach((cap,k)=>cards.push({p,k,cap})));
+ const rows=2,per=Math.ceil(cards.length/rows),step=360/per;
+ const face=(c,back)=>back
+  ?`<span class="rf bk" aria-hidden="true"><img src="${src(c.p.id,c.k)}" alt="" draggable="false"></span>`
+  :`<a class="rf fr" href="#project-${c.p.id}" draggable="false" aria-label="${esc(c.p.name)}: ${esc(c.cap)}"><img src="${src(c.p.id,c.k)}" alt="" draggable="false"><span class="rtag"><small>${esc(c.p.tags[0]||"Funnel")}</small>${esc(c.p.client)}</span></a>`;
+ el.innerHTML=`<div class="ring" id="ring" tabindex="0" role="group" aria-label="Funnel gallery. Drag or use the arrow keys to spin, then choose a card to open its case study."><div class="rstage" id="rst">${cards.map(c=>`<div class="rc">${face(c,0)}${face(c,1)}</div>`).join("")}</div><p class="rhint">Drag to spin &middot; Click a card to open</p></div>`;
+ const ring=$("#ring"),stage=$("#rst"),els=[...stage.children],tilt=-10;
+ let r=0,ang=0,vel=0,target=null,hover=false,dragging=false,moved=0,lastX=0,lastT=0,raf=0,visible=true,prev=performance.now();
+ const auto=reduce?0:7; /* degrees per second */
+ const theta=i=>(i%per)*step+(i>=per?step/2:0);
+ const layout=()=>{
+  const w=els[0].offsetWidth,h=els[0].offsetHeight,gap=Math.max(14,w*.12);
+  r=per*(w+gap)/(2*Math.PI);
+  ring.style.perspective=Math.round(r*2.6)+"px";
+  ring.style.height=Math.round(h*2+gap+r*.3+70)+"px";
+  els.forEach((c,i)=>{const y=(i>=per?1:-1)*(h+gap*.8)/2;
+   c.style.transform=`rotateY(${theta(i)}deg) translateZ(${r}px) translateY(${y}px)`});
+ };
+ const draw=()=>{
+  stage.style.transform=`translateY(-40px) translateZ(${-r}px) rotateX(${tilt}deg) rotateY(${ang}deg)`;
+  els.forEach((c,i)=>{const f=Math.cos((theta(i)+ang)*Math.PI/180);c.style.opacity=(.3+.7*Math.pow((f+1)/2,1.4)).toFixed(3)});
+ };
+ const tick=t=>{
+  const dt=Math.min(.05,(t-prev)/1000);prev=t;
+  if(target!==null){const d=target-ang;ang+=d*Math.min(1,dt*7);if(Math.abs(d)<.05){ang=target;target=null}}
+  else if(!dragging){const want=hover?auto*.25:auto;vel+=(want-vel)*Math.min(1,dt*1.6);ang+=vel*dt}
+  draw();raf=visible?requestAnimationFrame(tick):0;
+ };
+ const start=()=>{if(!raf){prev=performance.now();raf=requestAnimationFrame(tick)}};
+ /* bring a card to the front, the shortest way round */
+ const face2front=i=>{let t=-theta(i);t+=Math.round((ang-t)/360)*360;target=t};
+ ring.addEventListener("pointerenter",()=>hover=true);
+ ring.addEventListener("pointerleave",()=>hover=false);
+ ring.addEventListener("pointerdown",e=>{if(e.button)return;dragging=true;moved=0;lastX=e.clientX;lastT=performance.now();vel=0;target=null;ring.classList.add("drag")});
+ const onMove=e=>{if(!dragging)return;const now=performance.now(),dx=e.clientX-lastX;moved+=Math.abs(dx);
+  const d=dx*.28;ang+=d;vel=vel*.6+(d/Math.max(.008,(now-lastT)/1000))*.4;lastX=e.clientX;lastT=now};
+ const onUp=()=>{if(!dragging)return;dragging=false;ring.classList.remove("drag");vel=Math.max(-400,Math.min(400,vel))};
+ addEventListener("pointermove",onMove);addEventListener("pointerup",onUp);addEventListener("pointercancel",onUp);
+ /* a drag is not a click */
+ ring.addEventListener("click",e=>{if(moved>6){e.preventDefault();e.stopPropagation()}},true);
+ els.forEach((c,i)=>c.querySelector(".fr").addEventListener("focus",()=>{if(!dragging)face2front(i)}));
+ ring.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();const base=target??ang;target=base+(e.key==="ArrowLeft"?step:-step)}});
+ const io=new IntersectionObserver(([en])=>{visible=en.isIntersecting;if(visible)start()});io.observe(ring);
+ const onVis=()=>{visible=!document.hidden;if(visible)start()};document.addEventListener("visibilitychange",onVis);
+ addEventListener("resize",layout);
+ layout();draw();start();
+ ringCleanup=()=>{cancelAnimationFrame(raf);raf=0;visible=false;io.disconnect();document.removeEventListener("visibilitychange",onVis);removeEventListener("pointermove",onMove);removeEventListener("pointerup",onUp);removeEventListener("pointercancel",onUp);removeEventListener("resize",layout)};
+}
+
 /* shared blocks */
 const cursor='<svg viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-2 6z"/></svg>';
 const ctaBlock=()=>`<section class="cta"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="30"/></svg><h2>${esc(C.cta.h)}</h2><p>${esc(C.cta.p)}</p><div class="btns"><a class="btn" href="#contact">Let's Work Together</a><a class="btn ghost" href="#projects">View My Projects</a></div></section>`;
@@ -413,8 +481,8 @@ const V={
  services(){return `<p class="eyebrow">Services</p><h1>What I can build for you.</h1><p class="sub">Four service areas. Choose one, or combine them so your marketing, communication and operations all work together.</p>${svcCards()}${ctaBlock()}`},
  projects(){
   const P=C.projects;
-  return `<p class="eyebrow">My work</p><h1>Funnels and automations you can open.</h1><p class="sub">Move through the funnels, then open the live site or the full case study.</p>
-  <div class="cfmount"></div>
+  return `<p class="eyebrow">My work</p><h1>Funnels and automations you can open.</h1><p class="sub">Spin through every page I built, then click any card to open the full case study.</p>
+  <div class="ringmount"></div>
   <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2>
   <div class="frame"><div class="pill">${cursor}Click a card to open it</div><div class="bento">${P.map((p,i)=>tile(p,P.length%2&&i===P.length-1?"p12":"p6")).join("")}</div></div></section>${ctaBlock()}`},
  project(id){
@@ -476,7 +544,7 @@ function route(){
  const h=(location.hash||"#home").slice(1);let page,arg;
  if(h.startsWith("project-")&&C.projects.some(p=>"project-"+p.id===h)){page="project";arg=h.slice(8)}
  else{page=V[h]&&h!=="project"?h:"home"}
- closeModal();clearInterval(cfTimer);cfCleanup&&cfCleanup();cfCleanup=null;heroCleanup&&heroCleanup();heroCleanup=null;
+ closeModal();clearInterval(cfTimer);cfCleanup&&cfCleanup();cfCleanup=null;ringCleanup&&ringCleanup();ringCleanup=null;heroCleanup&&heroCleanup();heroCleanup=null;
  $("#app").innerHTML=`<div class="page ${page}">${V[page](arg)}</div>`;
  const cur=page==="project"?"projects":page;
  document.querySelectorAll("#nav a").forEach(a=>a.dataset.k===cur?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
@@ -484,6 +552,7 @@ function route(){
  document.querySelectorAll("[data-svc]").forEach(a=>a.addEventListener("click",()=>{pendingSvc=a.dataset.svc}));
  document.querySelectorAll('a[href="#contact"]:not([data-svc])').forEach(a=>a.addEventListener("click",()=>{pendingSvc=""}));
  const cm=document.querySelector(".cfmount");if(cm)coverflow(cm);
+ const rm=document.querySelector(".ringmount");if(rm)funnelRing(rm);
  if(page==="home")heroIntro();
  if(page==="project"){
   const p=C.projects.find(x=>x.id===arg),main=$("#main"),cap=$("#cap");let cur=0;
