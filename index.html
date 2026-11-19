@@ -159,6 +159,18 @@ a.card{text-decoration:none;display:block}
 .nextp:hover{border-color:var(--accent)}
 .nextp small{display:block;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.nextp b{font-size:20px}
 
+/* designs gallery */
+.posts{columns:3 260px;column-gap:16px;margin-top:8px}
+.post{display:block;width:100%;margin:0 0 16px;padding:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--soft);cursor:zoom-in;break-inside:avoid;transition:transform .3s,border-color .3s,box-shadow .3s}
+.post:hover,.post:focus-visible{transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 50%,var(--line));box-shadow:var(--shadow)}
+.post img{width:100%;height:auto;display:block}
+.pv{margin:0;display:flex;align-items:center;justify-content:center;gap:14px}
+.pv img{max-width:100%;max-height:86vh;width:auto;height:auto;display:block;border-radius:14px;box-shadow:0 30px 60px rgba(0,0,0,.45)}
+.pv button{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:20px;cursor:pointer;transition:background .2s}
+.pv button:hover{background:rgba(255,255,255,.2)}
+.pvc{text-align:center;color:rgba(255,255,255,.7);font-size:13px;font-weight:700;letter-spacing:.1em;margin:12px 0 0}
+@media(max-width:600px){.posts{columns:2;column-gap:10px}.post{margin-bottom:10px;border-radius:12px}.pv{gap:6px}.pv button{width:38px;height:38px}}
+
 /* about / contact */
 .about{display:grid;gap:44px;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}
 .photo{aspect-ratio:1/1;max-width:460px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
@@ -193,18 +205,6 @@ textarea{resize:vertical}
 .dots{display:flex;gap:8px}.dots button{width:10px;height:10px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer;transition:background .25s,transform .25s}
 .dots button[aria-current="true"]{background:var(--accent);transform:scale(1.3)}
 .cfhint{text-align:center;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:14px 0 0}
-
-/* designs gallery */
-.posts{columns:3 260px;column-gap:16px;margin-top:8px}
-.post{display:block;width:100%;margin:0 0 16px;padding:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--soft);cursor:zoom-in;break-inside:avoid;transition:transform .3s,border-color .3s,box-shadow .3s}
-.post:hover,.post:focus-visible{transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 50%,var(--line));box-shadow:var(--shadow)}
-.post img{width:100%;height:auto;display:block}
-.pv{margin:0;display:flex;align-items:center;justify-content:center;gap:14px}
-.pv img{max-width:100%;max-height:86vh;width:auto;height:auto;display:block;border-radius:14px;box-shadow:0 30px 60px rgba(0,0,0,.45)}
-.pv button{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:20px;cursor:pointer;transition:background .2s}
-.pv button:hover{background:rgba(255,255,255,.2)}
-.pvc{text-align:center;color:rgba(255,255,255,.7);font-size:13px;font-weight:700;letter-spacing:.1em;margin:12px 0 0}
-@media(max-width:600px){.posts{columns:2;column-gap:10px}.post{margin-bottom:10px;border-radius:12px}.pv{gap:6px}.pv button{width:38px;height:38px}}
 
 /* modal */
 .modal{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:rgba(9,13,24,.84);backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;z-index:60}
@@ -427,6 +427,7 @@ function openPost(i){
   postKey=e=>{if(e.key==="ArrowLeft")openPost(i-1);if(e.key==="ArrowRight")openPost(i+1)};addEventListener("keydown",postKey)});
 }
 let postKey=null;
+document.addEventListener("click",e=>{const b=e.target.closest(".post");if(b)openPost(+b.dataset.i)});
 const V={
  home(){
   const j=C.journey.map((n,i)=>`<span class="jn" style="--i:${i}">${esc(n)}</span>${i<C.journey.length-1?`<span class="jl" style="--i:${i}"></span>`:""}`).join("");
@@ -520,7 +521,6 @@ function route(){
  document.querySelectorAll("[data-svc]").forEach(a=>a.addEventListener("click",()=>{pendingSvc=a.dataset.svc}));
  document.querySelectorAll('a[href="#contact"]:not([data-svc])').forEach(a=>a.addEventListener("click",()=>{pendingSvc=""}));
  const cm=document.querySelector(".cfmount");if(cm)coverflow(cm);
- document.querySelectorAll(".post").forEach(b=>b.onclick=()=>openPost(+b.dataset.i));
  if(page==="home")heroIntro();
  if(page==="project"){
   const p=C.projects.find(x=>x.id===arg),main=$("#main"),cap=$("#cap");let cur=0;
