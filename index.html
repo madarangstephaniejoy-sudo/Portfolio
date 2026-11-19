@@ -245,6 +245,7 @@ a.card{text-decoration:none;display:block}
 .photo{aspect-ratio:1/1;width:100%;max-width:380px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
 .photo img{width:100%;height:100%;object-fit:cover}
 .aboutwrap .txt{max-width:64ch}.aboutwrap .txt p{margin:0 0 18px;font-size:17px;line-height:1.7}.aboutwrap .txt p:last-child{margin-bottom:0}
+.tools{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}.tools h3{margin:0 0 14px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}.tools .chip{font-size:14px;padding:6px 14px;color:var(--ink)}
 .cwrap{display:grid;gap:40px;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);align-items:start}
 .cinfo dl{margin:0;display:grid;gap:18px}.cinfo dt{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}.cinfo dd{margin:2px 0 0;font-size:18px;font-weight:600;overflow-wrap:anywhere}
 form{display:grid;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px}
@@ -359,6 +360,7 @@ const C={
   "Alongside funnels and automation, I create email campaigns, social media content, and professional digital materials, so a business can look consistent and communicate clearly with its customers.",
   "My goal is to help business owners spend less time managing repetitive tasks and more time focusing on growing their businesses. I value clear communication, attention to detail, reliability, and creating solutions that address each business's needs."
  ],
+ tools:["Canva","GoHighLevel (GHL)","Microsoft Office","Google Workspace","Slack","Zoom","Calendly","ChatGPT","Claude"],
  services:[
   {id:"Funnels & Business Automation",s:"GoHighLevel funnels, workflows, CRM setup and appointment booking.",d:"Systems that capture leads and follow up with them automatically.",items:["GoHighLevel funnel building","Landing page creation","Workflow automation","CRM and pipeline setup","Lead capture and nurturing","Appointment booking automation"]},
   {id:"Email Marketing",s:"Campaigns, newsletters and automated email sequences.",d:"Emails that keep your audience informed and coming back.",items:["Email campaign creation","Newsletter design","Automated email sequences","Welcome and onboarding emails","Promotional email content","Email template design"]},
@@ -709,7 +711,7 @@ const V={
   <section class="sec"><p class="eyebrow">My work</p><h2>Six funnels, from first click to follow-up.</h2><div class="cfmount" style="margin-top:22px"></div></section>
   ${whyBlock()}${ctaBlock()}`},
  about(){return `<p class="eyebrow">About me</p><h1>Who I am.</h1>
-  <div class="aboutwrap"><div class="photo">${C.photo?`<img src="${esc(C.photoFull||C.photo)}" alt="${esc(C.name)}">`:esc(initials)}</div><div class="txt">${C.about.map(p=>`<p>${esc(p)}</p>`).join("")}</div></div>
+  <div class="aboutwrap"><div class="photo">${C.photo?`<img src="${esc(C.photoFull||C.photo)}" alt="${esc(C.name)}">`:esc(initials)}</div><div class="txt">${C.about.map(p=>`<p>${esc(p)}</p>`).join("")}${C.tools&&C.tools.length?`<div class="tools"><h3>Tools I use</h3><div class="chips">${C.tools.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div></div>`:""}</div></div>
   ${whyBlock()}${ctaBlock()}`},
  services(){return `<p class="eyebrow">Services</p><h1>What I can build for you.</h1><p class="sub">Four service areas. Choose one, or combine them so your marketing, communication and operations all work together.</p>${svcCards()}${ctaBlock()}`},
  projects(){
