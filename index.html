@@ -215,7 +215,12 @@ a.card{text-decoration:none;display:block}
 .wflist b{color:var(--accent);font-size:13px;padding-top:2px}
 .wflist strong{display:block;font-size:15px}.wflist small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
 .wfhint{color:var(--mute);font-size:13.5px;margin:0 0 12px}
-@media(max-width:900px){.wfone{grid-template-columns:1fr;padding:22px 16px}}
+.wflist{max-height:clamp(300px,36vw,410px);overflow-y:auto;overscroll-behavior:contain;padding:2px 10px 2px 2px;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--accent) 55%,transparent) transparent;-webkit-mask-image:linear-gradient(#000 calc(100% - 46px),transparent);mask-image:linear-gradient(#000 calc(100% - 46px),transparent);transition:-webkit-mask-image .2s}
+.wflist.scrolled{-webkit-mask-image:linear-gradient(transparent,#000 46px,#000 calc(100% - 46px),transparent);mask-image:linear-gradient(transparent,#000 46px,#000 calc(100% - 46px),transparent)}
+.wflist.scrolled.end{-webkit-mask-image:linear-gradient(transparent,#000 46px);mask-image:linear-gradient(transparent,#000 46px)}
+.wflist::-webkit-scrollbar{width:6px}.wflist::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--accent) 55%,transparent);border-radius:6px}.wflist::-webkit-scrollbar-track{background:transparent}
+.wfcount{float:right;color:var(--accent);font-weight:700}
+@media(max-width:900px){.wfone{grid-template-columns:1fr;padding:22px 16px}.wflist{max-height:340px}}
 @media(prefers-reduced-motion:reduce){.fdoc,.fold .ffront{transition:none}}
 .wfv{width:min(1000px,100%);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:28px;align-items:start}
 .wfv img{width:100%;height:auto;display:block;border-radius:16px;background:#f6f7f9}
@@ -619,8 +624,9 @@ function wfFolder(){
  const n=WF.length,mid=(n-1)/2;
  const docs=WF.map((w,i)=>{const o=i-mid;return `<button type="button" class="fdoc" data-wf="${i}" tabindex="-1" style="--o:${o};--a:${Math.abs(o)};--k:${i}" aria-label="View workflow: ${esc(w.t)}"><img src="workflows/${w.f}-sm.jpg" alt="" loading="lazy"><span><b>${String(i+1).padStart(2,"0")}</b>${esc(w.s)}</span></button>`}).join("");
  return `<div class="wfone"><div class="fold" tabindex="0" style="${fanVars(n)}" aria-label="Automation workflows folder. Press Enter to open it."><span class="fback"></span>${docs}<span class="ffront"><b>GoHighLevel</b><i>Automation workflows</i><small>${n} workflows inside &middot; hover or tap to open</small></span></div>
- <div><p class="wfhint">Open the folder and click any workflow to see it in full, or pick one here:</p><ol class="wflist">${WF.map((w,i)=>`<li><button type="button" data-wf="${i}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(w.t)}</strong><small>Trigger: ${esc(w.trig)}</small></span></button></li>`).join("")}</ol></div></div>`;
+ <div><p class="wfhint">Open the folder and click any workflow to see it in full, or pick one here. Scroll for more.</p><ol class="wflist">${WF.map((w,i)=>`<li><button type="button" data-wf="${i}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(w.t)}</strong><small>Trigger: ${esc(w.trig)}</small></span></button></li>`).join("")}</ol></div></div>`;
 }
+document.addEventListener("scroll",e=>{const l=e.target;if(!l.classList||!l.classList.contains("wflist"))return;l.classList.toggle("scrolled",l.scrollTop>4);l.classList.toggle("end",l.scrollTop+l.clientHeight>=l.scrollHeight-4)},true);
 function openWf(i){const w=WF[i];openModal(`<div class="wfv"><img src="workflows/${w.f}.png" alt="GoHighLevel workflow builder showing the ${esc(w.t)} automation"><div class="wfx"><p class="eyebrow">GHL workflow</p><h3>${esc(w.t)}</h3><p><b>Trigger:</b> ${esc(w.trig)}</p><p>${esc(w.d)}</p><ol>${w.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div></div>`)}
 /* email templates (screenshots live in /emails), shown in the same opening folder */
 const EM=[
@@ -635,7 +641,7 @@ function emFolder(){
  const n=EM.length,mid=(n-1)/2;
  const docs=EM.map((m,i)=>{const o=i-mid;return `<button type="button" class="fdoc" data-em="${i}" tabindex="-1" style="--o:${o};--a:${Math.abs(o)};--k:${i}" aria-label="View email: ${esc(m.b)} ${esc(m.t)}"><img src="emails/${m.f}-sm.jpg" alt="" loading="lazy"><span><b>${String(i+1).padStart(2,"0")}</b>${esc(m.s)}</span></button>`}).join("");
  return `<div class="wfone"><div class="fold" tabindex="0" style="${fanVars(n)}" aria-label="Email templates folder. Press Enter to open it."><span class="fback"></span>${docs}<span class="ffront"><b>GoHighLevel</b><i>Email templates</i><small>${n} emails inside &middot; hover or tap to open</small></span></div>
- <div><p class="wfhint">Open the folder and click any email to see the full design, or pick one here:</p><ol class="wflist">${EM.map((m,i)=>`<li><button type="button" data-em="${i}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(m.b)}: ${esc(m.t)}</strong><small>${esc(m.k)}</small></span></button></li>`).join("")}</ol></div></div>`;
+ <div><p class="wfhint">Open the folder and click any email to see the full design, or pick one here. Scroll for more.</p><ol class="wflist">${EM.map((m,i)=>`<li><button type="button" data-em="${i}"><b>${String(i+1).padStart(2,"0")}</b><span><strong>${esc(m.b)}: ${esc(m.t)}</strong><small>${esc(m.k)}</small></span></button></li>`).join("")}</ol></div></div>`;
 }
 function openEm(i){const m=EM[i];openModal(`<div class="wfv"><img src="emails/${m.f}.jpg" alt="Full email design: ${esc(m.b)} ${esc(m.t)}"><div class="wfx"><p class="eyebrow">${esc(m.k)}</p><h3>${esc(m.b)}: ${esc(m.t)}</h3><p>${esc(m.d)}</p><p>Built with GoHighLevel merge fields such as {{contact.first_name}}, so every email is personalised automatically.</p></div></div>`)}
 document.addEventListener("click",e=>{
