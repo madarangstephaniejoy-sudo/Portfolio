@@ -331,6 +331,25 @@ button.btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
  .thumbs{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}h1 .w span{transform:none}.hl .ln>span{transform:none}.tl li{opacity:1;transform:none}}
+/* ===== custom cursor: 8px accent dot + 38px trailing ring (fine pointers only) ===== */
+html.cc,html.cc *{cursor:none!important}
+.cdot,.cring{position:fixed;left:0;top:0;pointer-events:none;z-index:2147483647;border-radius:50%;opacity:0;transition:opacity .25s}
+.cdot{width:8px;height:8px;margin:-4px 0 0 -4px;background:var(--accent)}
+.cring{width:38px;height:38px;margin:-19px 0 0 -19px;border:1.5px solid color-mix(in srgb,var(--accent) 55%,transparent)}
+html.cc.cv .cdot,html.cc.cv .cring{opacity:1}
+/* ===== hero network canvas ===== */
+.hero{position:relative;isolation:isolate}
+.hnet{position:absolute;top:-44px;left:0;width:100%;height:calc(100% + 68px);display:block;z-index:-1;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse 75% 80% at 55% 45%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 75% 80% at 55% 45%,#000 55%,transparent 100%)}
+@media(min-width:901px){.hnet{left:-56px;width:calc(100% + 112px)}}
+/* ===== primary button: soft blue arc travelling around a 2px outline, one turn per 3s ===== */
+@property --arc{syntax:"<angle>";inherits:false;initial-value:0deg}
+.btn.arc{position:relative}
+.btn.arc::after{content:"";position:absolute;inset:-5px;border-radius:inherit;padding:2px;pointer-events:none;
+ background:conic-gradient(from var(--arc),transparent 0deg,transparent 200deg,color-mix(in srgb,var(--accent) 30%,transparent) 270deg,var(--accent) 340deg,transparent 360deg),color-mix(in srgb,var(--accent) 16%,transparent);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+ animation:arcspin 3s linear infinite}
+@keyframes arcspin{to{--arc:360deg}}
+@media(prefers-reduced-motion:reduce){.btn.arc::after{animation:none!important}}
 </style>
 </head>
 <body>
@@ -345,7 +364,7 @@ button.btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
  <div class="avatar" id="avatar"></div>
  <div class="who"><b id="sname"></b><span id="srole"></span></div>
  <div class="links" id="slinks"></div>
- <div class="sidecta"><a class="btn" href="#contact">Let's Work Together</a><button class="themebtn" id="theme" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button></div>
+ <div class="sidecta"><a class="btn arc" href="#contact">Let's Work Together</a><button class="themebtn" id="theme" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button></div>
  <nav class="nav" id="nav" aria-label="Main"></nav>
  <div class="copy" id="copy"></div>
 </aside>
@@ -582,7 +601,7 @@ function funnelRing(el){
 
 /* shared blocks */
 const cursor='<svg viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-2 6z"/></svg>';
-const ctaBlock=()=>`<section class="cta"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="30"/></svg><h2>${esc(C.cta.h)}</h2><p>${esc(C.cta.p)}</p><div class="btns"><a class="btn" href="#contact">Let's Work Together</a><a class="btn ghost" href="#projects">View My Projects</a></div></section>`;
+const ctaBlock=()=>`<section class="cta"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="30"/></svg><h2>${esc(C.cta.h)}</h2><p>${esc(C.cta.p)}</p><div class="btns"><a class="btn arc" href="#contact">Let's Work Together</a><a class="btn ghost" href="#projects">View My Projects</a></div></section>`;
 const whyBlock=()=>`<section class="sec"><p class="eyebrow">Why work with me</p><h2>A calm, organized way to build your systems.</h2><div class="rows" style="margin-top:22px">${C.why.map(w=>`<div class="row"><h3>${esc(w.t)}</h3><p>${esc(w.d)}</p></div>`).join("")}</div></section>`;
 const tile=(p,cls)=>`<a class="tile ${cls}" href="#project-${p.id}"><span class="shotwrap"><img src="${src(p.id,0)}" alt="Preview of the ${esc(p.client)} funnel" loading="lazy"></span><span class="t"><b>${esc(p.name)}</b><p>${esc(p.short)}</p><span class="chips">${p.tags.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</span></span></a>`;
 const svcCards=()=>`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))">${C.services.map((s,i)=>`<div class="card svc"><span class="sico">${ic(sico[i])}</span><h3>${esc(s.id)}</h3><p>${esc(s.d)}</p><ul>${s.items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul><a class="btn ghost" href="#contact" data-svc="${esc(s.id)}">Ask about this</a></div>`).join("")}</div>`;
@@ -797,11 +816,11 @@ new MutationObserver(()=>{
 const V={
  home(){
   const j=C.journey.map((n,i)=>`<span class="jn" style="--i:${i}">${esc(n)}</span>${i<C.journey.length-1?`<span class="jl" style="--i:${i}"></span>`:""}`).join("");
-  return `<p class="eyebrow">${esc(C.role)}</p>
+  return `<div class="hero"><canvas class="hnet" aria-hidden="true"></canvas><p class="eyebrow">${esc(C.role)}</p>
   <h1 class="hl" id="hh" data-t="${esc(C.hero.headline.join(" "))}">${esc(C.hero.headline.join(" "))}</h1>
   <p class="lead rv" style="margin-bottom:16px">${esc(C.hero.text)}</p>
   <div class="chips rv" style="margin-bottom:26px">${C.hero.skills.map(k=>`<span class="chip">${esc(k)}</span>`).join("")}</div>
-  <div class="btns rv"><a class="btn" href="#contact">Let's Work Together</a><a class="btn ghost" href="#projects">View My Projects</a></div>
+  <div class="btns rv"><a class="btn arc" href="#contact">Let's Work Together</a><a class="btn ghost" href="#projects">View My Projects</a></div></div>
   <div class="journey" role="img" aria-label="Customer journey: ${esc(C.journey.join(", "))}">${j}</div>
   <p class="jcap">One customer journey, automated end to end.</p>
   <section class="sec"><p class="eyebrow">Services</p><h2>Four services that work together.</h2><div class="grid" style="margin-top:22px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">${C.services.map((v,i)=>`<a class="card" href="#services"><span class="sico">${ic(sico[i])}</span><h3>${esc(v.id)}</h3><p>${esc(v.s)}</p></a>`).join("")}</div></section>
@@ -885,7 +904,7 @@ function route(){
  const h=(location.hash||"#home").slice(1);let page,arg;
  if(h.startsWith("project-")&&C.projects.some(p=>"project-"+p.id===h)){page="project";arg=h.slice(8)}
  else{page=V[h]&&h!=="project"?h:"home"}
- closeModal();clearInterval(cfTimer);cfCleanup&&cfCleanup();cfCleanup=null;ringCleanup&&ringCleanup();ringCleanup=null;heroCleanup&&heroCleanup();heroCleanup=null;
+ closeModal();clearInterval(cfTimer);cfCleanup&&cfCleanup();cfCleanup=null;ringCleanup&&ringCleanup();ringCleanup=null;heroCleanup&&heroCleanup();heroCleanup=null;netCleanup&&netCleanup();netCleanup=null;
  $("#app").innerHTML=`<div class="page ${page}">${V[page](arg)}</div>`;
  const cur=page==="project"?"projects":page;
  document.querySelectorAll("#nav a").forEach(a=>a.dataset.k===cur?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
@@ -894,7 +913,7 @@ function route(){
  document.querySelectorAll('a[href="#contact"]:not([data-svc])').forEach(a=>a.addEventListener("click",()=>{pendingSvc=""}));
  const cm=document.querySelector(".cfmount");if(cm)coverflow(cm);
  const rm=document.querySelector(".ringmount");if(rm)funnelRing(rm);
- if(page==="home")heroIntro();
+ if(page==="home"){heroIntro();const hn=document.querySelector(".hnet");if(hn)heroNet(hn)}
  if(page==="project"){
   const p=C.projects.find(x=>x.id===arg),main=$("#main"),cap=$("#cap");let cur=0;
   document.querySelectorAll(".thumbs button").forEach(b=>b.onclick=()=>{
@@ -922,6 +941,72 @@ function route(){
    st.innerHTML=`Sorry, something went wrong and your message wasn't sent. Please try again, or <a href="${mailto}">email me directly</a>.`;
   }
  };
+}
+/* ===== custom cursor: dot sticks to the pointer, ring follows on a spring and settles ===== */
+(function(){
+ if(!matchMedia("(hover:hover) and (pointer:fine)").matches)return;
+ const root=document.documentElement,dot=document.createElement("div"),ring=document.createElement("div");
+ dot.className="cdot";ring.className="cring";dot.setAttribute("aria-hidden","true");ring.setAttribute("aria-hidden","true");
+ document.body.append(ring,dot);root.classList.add("cc");
+ let mx=-100,my=-100,rx=-100,ry=-100,vx=0,vy=0,raf=0,first=true;
+ const K=.16,D=.68; // spring stiffness and damping: a little overshoot, then it settles
+ const put=(el,x,y)=>el.style.transform=`translate3d(${x}px,${y}px,0)`;
+ const tick=()=>{
+  vx=(vx+(mx-rx)*K)*D;vy=(vy+(my-ry)*K)*D;rx+=vx;ry+=vy;put(ring,rx,ry);
+  if(Math.abs(vx)+Math.abs(vy)<.02&&Math.abs(mx-rx)+Math.abs(my-ry)<.1){rx=mx;ry=my;put(ring,rx,ry);raf=0;return}
+  raf=requestAnimationFrame(tick)};
+ addEventListener("pointermove",e=>{
+  if(e.pointerType!=="mouse")return;
+  mx=e.clientX;my=e.clientY;put(dot,mx,my);
+  if(first||reduce){rx=mx;ry=my;vx=vy=0;put(ring,rx,ry);first=false}
+  root.classList.add("cv");
+  if(!reduce&&!raf)raf=requestAnimationFrame(tick)},{passive:true});
+ document.addEventListener("mouseleave",()=>root.classList.remove("cv"));
+ document.addEventListener("mouseenter",()=>root.classList.add("cv"));
+})();
+/* shared pointer position for the hero network */
+const ptr={x:-1e4,y:-1e4,on:false};
+addEventListener("pointermove",e=>{ptr.x=e.clientX;ptr.y=e.clientY;ptr.on=true},{passive:true});
+document.addEventListener("mouseleave",()=>{ptr.on=false});
+
+/* ===== hero network: 35–60 drifting nodes, linked when close; the cursor is one more node ===== */
+let netCleanup=null;
+function heroNet(cv){
+ const ctx=cv.getContext("2d");if(!ctx)return;
+ let w=0,h=0,dpr=1,nodes=[],raf=0,alive=true,vis=true,col="29,79,184";
+ const LINK=130,CLINK=170;
+ const readCol=()=>{const s=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();const m=s.match(/^#?([0-9a-f]{6})$/i);if(m){const n=parseInt(m[1],16);col=`${n>>16&255},${n>>8&255},${n&255}`}};
+ const size=()=>{
+  const r=cv.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);w=r.width;h=r.height;
+  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+  const want=Math.max(35,Math.min(60,Math.round(w*h/15000)));
+  while(nodes.length<want){const a=Math.random()*Math.PI*2,s=.12+Math.random()*.22;nodes.push({x:Math.random()*w,y:Math.random()*h,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:1.4+Math.random()*1.4})}
+  nodes.length=want;nodes.forEach(n=>{n.x=Math.min(n.x,w);n.y=Math.min(n.y,h)})};
+ const draw=()=>{
+  ctx.clearRect(0,0,w,h);
+  const r=cv.getBoundingClientRect(),cx=ptr.x-r.left,cy=ptr.y-r.top,cur=ptr.on&&cx>-CLINK&&cy>-CLINK&&cx<w+CLINK&&cy<h+CLINK;
+  ctx.lineWidth=1;
+  for(let i=0;i<nodes.length;i++){const a=nodes[i];
+   for(let j=i+1;j<nodes.length;j++){const b=nodes[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);
+    if(d<LINK){ctx.strokeStyle=`rgba(${col},${(1-d/LINK)*.32})`;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}
+   if(cur){const d=Math.hypot(a.x-cx,a.y-cy);if(d<CLINK){ctx.strokeStyle=`rgba(${col},${(1-d/CLINK)*.5})`;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(cx,cy);ctx.stroke()}}}
+  ctx.fillStyle=`rgba(${col},.55)`;
+  for(const n of nodes){ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill()}};
+ const step=()=>{
+  if(!alive)return;
+  for(const n of nodes){n.x+=n.vx;n.y+=n.vy;
+   if(n.x<0){n.x=0;n.vx=Math.abs(n.vx)}else if(n.x>w){n.x=w;n.vx=-Math.abs(n.vx)}
+   if(n.y<0){n.y=0;n.vy=Math.abs(n.vy)}else if(n.y>h){n.y=h;n.vy=-Math.abs(n.vy)}}
+  draw();raf=vis&&!document.hidden?requestAnimationFrame(step):0};
+ const go=()=>{if(alive&&!raf&&vis&&!document.hidden&&!reduce)raf=requestAnimationFrame(step)};
+ readCol();size();draw();go();
+ const ro=new ResizeObserver(()=>{size();draw()});ro.observe(cv);
+ const io=new IntersectionObserver(e=>{vis=e[0].isIntersecting;go()});io.observe(cv);
+ const onVis=()=>go(),onMove=()=>{if(reduce&&alive)draw()};
+ document.addEventListener("visibilitychange",onVis);addEventListener("pointermove",onMove,{passive:true});
+ const mo=new MutationObserver(()=>{readCol();draw()});mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+ const mq=matchMedia("(prefers-color-scheme:dark)"),onScheme=()=>{readCol();draw()};mq.addEventListener("change",onScheme);
+ netCleanup=()=>{alive=false;cancelAnimationFrame(raf);ro.disconnect();io.disconnect();mo.disconnect();document.removeEventListener("visibilitychange",onVis);removeEventListener("pointermove",onMove);mq.removeEventListener("change",onScheme)};
 }
 let navT=0;
 addEventListener("hashchange",()=>{
