@@ -245,23 +245,20 @@ a.card{text-decoration:none;display:block}
 .pcount{font-size:13px;font-weight:800;letter-spacing:.12em;color:var(--mute);margin:18px 0 0}
 @media(max-width:820px){.pstack{grid-template-columns:1fr;padding:30px 20px 26px;gap:22px}.pdeck{margin:10px auto 20px;width:min(240px,58vw)}.pinfo{text-align:center}.pbtns{justify-content:center}}
 
-/* project showcase: slow vertical auto-scroll, two lanes moving in opposite directions */
-.pstrip{position:relative;overflow:hidden;margin-top:22px;height:min(680px,78vh);outline-offset:4px;user-select:none;-webkit-user-select:none;
- -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 91%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 91%,transparent 100%)}
-.pstrip.still{overflow-y:auto}
+/* project showcase: slow horizontal auto-scroll that loops */
+.pstrip{position:relative;overflow:hidden;margin-top:22px;padding:6px 0 10px;outline-offset:4px;user-select:none;-webkit-user-select:none;
+ -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%)}
+.pstrip.still{overflow-x:auto}
 .pstrip.drag{cursor:grabbing}
-.pcols{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:26px;align-items:start;padding:0 4px}
-.plane{position:relative}
-.ptrack{will-change:transform}
-.pset{display:grid;gap:30px;padding:8px 0 30px}
-.pshot{display:block;text-decoration:none;color:inherit;-webkit-user-drag:none}
+.ptrack{display:flex;width:max-content;will-change:transform}
+.pset{display:flex;gap:22px;padding:8px 22px 0 0}
+.pshot{flex:none;width:clamp(260px,34vw,440px);display:block;text-decoration:none;color:inherit;-webkit-user-drag:none}
 .pimg{display:block;aspect-ratio:1029/561;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--soft);box-shadow:0 18px 40px rgba(5,10,30,.3);transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s}
 .pimg img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;pointer-events:none}
 .pstrip:not(.drag) .pshot:hover .pimg,.pshot:focus-visible .pimg{transform:translateY(-6px);border-color:var(--accent)}
 .pshot:focus-visible{outline:none}
 .pmeta{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:14px 4px 0}
 .pmeta b{color:var(--accent);font-size:13px;padding-top:3px}.pmeta strong{font-size:17px}.pmeta small{grid-column:2;color:var(--mute);font-size:13.5px}
-@media(max-width:760px){.pstrip{height:min(560px,72vh)}}
 /* about / contact */
 .aboutwrap{display:grid;gap:48px;grid-template-columns:minmax(220px,380px) minmax(0,1fr);align-items:start;margin-top:30px}
 .photo{aspect-ratio:1/1;width:100%;max-width:380px;border-radius:26px;background:radial-gradient(circle at 30% 25%,var(--card),var(--soft));display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--accent);overflow:hidden;border:1px solid var(--line)}
@@ -802,47 +799,40 @@ function designFlow(el,cfg){
  layout();
 }
 const designCfg=()=>({label:"design",items:POSTS.map(p=>({src:`posts/${p.f}-sm.jpg`,alt:p.alt,w:p.w,h:p.h})),open:i=>openPost(i)});
-/* vertical project showcase: cards glide slowly on their own (two lanes in opposite directions on wide screens),
-   pause on hover or keyboard focus, can be dragged with the mouse, and loop seamlessly */
+/* horizontal project showcase: cards glide slowly to the left on their own and loop seamlessly,
+   pause on hover or keyboard focus, and can be dragged with the mouse */
 function photoStrip(el){
- const P=C.projects,SPEED=26;                                       // pixels per second: slow, easy to read
+ const P=C.projects,SPEED=30;                                       // pixels per second: slow, easy to read
  const card=(p,i,dup)=>`<a class="pshot" href="#project-${p.id}" draggable="false"${dup?' tabindex="-1" aria-hidden="true"':""}><span class="pimg"><img src="${src(p.id,0)}" alt="${dup?"":esc(p.name)+" funnel"}" draggable="false" loading="lazy"></span><span class="pmeta"><b>${String(i+1).padStart(2,"0")}</b><strong>${esc(p.name)}</strong><small>${esc(p.tags.join(" · "))}</small></span></a>`;
- el.innerHTML=`<div class="pstrip" role="region" aria-label="Funnel projects. The list scrolls slowly on its own and pauses while you hover or tab through it; click a project to open its case study."><div class="pcols"></div></div><p class="dhint">Hover to pause &middot; click a project to open it</p>`;
- const box=el.querySelector(".pstrip"),cols=box.querySelector(".pcols");
- let n=0,lanes=[],raf=0,last=0,speed=1,hold=false,seen=true,drag=false,ly=0,moved=0;
- const wrap=l=>{if(!l.len)return;while(l.y<=-l.len)l.y+=l.len;while(l.y>0)l.y-=l.len};
- const apply=()=>lanes.forEach(l=>{wrap(l);l.t.style.transform=`translate3d(0,${l.y}px,0)`});
- const measure=()=>lanes.forEach(l=>{const f=l.len?l.y/l.len:l.start;l.len=l.t.firstElementChild.offsetHeight;l.y=f*l.len});
- const build=()=>{
-  const k=box.clientWidth>=760?2:1;if(k===n)return;n=k;cols.style.setProperty("--n",k);
-  const g=Array.from({length:k},()=>[]);P.forEach((p,i)=>g[i%k].push([p,i]));
-  cols.innerHTML=g.map(list=>`<div class="plane"><div class="ptrack">${[0,1].map(d=>`<div class="pset">${list.map(([p,i])=>card(p,i,d)).join("")}</div>`).join("")}</div></div>`).join("");
-  lanes=[...cols.querySelectorAll(".ptrack")].map((t,c)=>({t,dir:c%2?1:-1,y:0,len:0,start:c%2?-.5:0}));
-  measure();apply();
-  cols.querySelectorAll("img").forEach(im=>im.complete||im.addEventListener("load",()=>{measure();apply()},{once:true}));
-  /* keyboard: bring a focused card fully into view */
-  cols.querySelectorAll(".pshot:not([tabindex])").forEach(a=>a.addEventListener("focus",()=>{const l=lanes.find(l=>l.t.contains(a));if(!l)return;const top=a.offsetTop+l.y;if(top<20||top+a.offsetHeight>box.clientHeight-20){l.y=-a.offsetTop+40;apply()}}));
- };
- if(reduce){box.classList.add("still");n=1;cols.style.setProperty("--n",box.clientWidth>=760?2:1);cols.innerHTML=`<div class="pset" style="display:contents">${P.map((p,i)=>card(p,i,0)).join("")}</div>`;return}
+ const sets=reduce?1:2;
+ el.innerHTML=`<div class="pstrip" role="region" aria-label="Funnel projects. The strip scrolls slowly on its own and pauses while you hover or tab through it; click a project to open its case study."><div class="ptrack">${Array.from({length:sets},(_,d)=>`<div class="pset">${P.map((p,i)=>card(p,i,d)).join("")}</div>`).join("")}</div></div><p class="dhint">Hover to pause &middot; click a project to open it</p>`;
+ const box=el.querySelector(".pstrip"),track=box.querySelector(".ptrack");
+ if(reduce){box.classList.add("still");return}
+ let x=0,len=0,raf=0,last=0,speed=1,hold=false,seen=true,drag=false,lx=0,moved=0;
+ const apply=()=>{if(len){while(x<=-len)x+=len;while(x>0)x-=len}track.style.transform=`translate3d(${x}px,0,0)`};
+ const measure=()=>{const f=len?x/len:0;len=track.firstElementChild.offsetWidth;x=f*len;apply()};
+ track.querySelectorAll("img").forEach(im=>im.complete||im.addEventListener("load",measure,{once:true}));
  const tick=t=>{
   if(!box.isConnected){raf=0;return}
   const dt=Math.min(.05,(t-(last||t))/1000);last=t;
   speed+=(((hold||drag)?0:1)-speed)*Math.min(1,dt*4);              // ease in and out of the pause
-  if(!drag)lanes.forEach(l=>l.y+=l.dir*SPEED*speed*dt);
+  if(!drag)x-=SPEED*speed*dt;
   apply();
   raf=seen?requestAnimationFrame(tick):0;
  };
  const run=()=>{if(!raf&&seen){last=0;raf=requestAnimationFrame(tick)}};
  box.addEventListener("mouseenter",()=>hold=true);box.addEventListener("mouseleave",()=>hold=false);
  box.addEventListener("focusin",()=>hold=true);box.addEventListener("focusout",()=>hold=false);
- /* mouse drag scrubs the lanes up or down; a drag is not a click */
- box.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button)return;drag=true;moved=0;ly=e.clientY;box.classList.add("drag");addEventListener("pointermove",mv);addEventListener("pointerup",up)});
- const mv=e=>{const dy=e.clientY-ly;ly=e.clientY;moved+=Math.abs(dy);lanes.forEach(l=>l.y+=dy);apply()};
+ /* mouse drag scrubs the strip left or right; a drag is not a click */
+ box.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button)return;drag=true;moved=0;lx=e.clientX;box.classList.add("drag");addEventListener("pointermove",mv);addEventListener("pointerup",up)});
+ const mv=e=>{const dx=e.clientX-lx;lx=e.clientX;moved+=Math.abs(dx);x+=dx;apply()};
  const up=()=>{drag=false;box.classList.remove("drag");removeEventListener("pointermove",mv);removeEventListener("pointerup",up)};
  box.addEventListener("click",e=>{if(moved>6){e.preventDefault();e.stopPropagation();moved=0}},true);
+ /* keyboard: bring a focused card fully into view */
+ track.querySelectorAll(".pshot:not([tabindex])").forEach(a=>a.addEventListener("focus",()=>{const l=a.offsetLeft+x;if(l<20||l+a.offsetWidth>box.clientWidth-20){x=-a.offsetLeft+40;apply()}}));
  new IntersectionObserver(es=>{seen=es[0].isIntersecting;run()}).observe(box);
- const ro=new ResizeObserver(()=>{if(!box.isConnected){ro.disconnect();return}build();measure();apply()});ro.observe(box);
- build();run();
+ const ro=new ResizeObserver(()=>{if(!box.isConnected){ro.disconnect();return}measure()});ro.observe(box);
+ measure();run();
 }
 new MutationObserver(()=>{
  const m=document.querySelector(".dfmount");if(m&&!m.dataset.on){m.dataset.on="1";designFlow(m,designCfg())}
@@ -868,7 +858,7 @@ const V={
   const P=C.projects;
   return `<p class="eyebrow">My work</p><h1>Funnels and automations you can open.</h1><p class="sub">Spin through every page I built, then click any card to open the full case study.</p>
   <div class="ringmount"></div>
-  <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2><p class="sub">Every funnel I built scrolls slowly past. Hover to pause, then click a project to open the full case study.</p>
+  <section class="sec"><p class="eyebrow">All projects</p><h2>Objective, structure, workflow and features.</h2><p class="sub">Every funnel I built glides slowly past. Hover to pause, then click a project to open the full case study.</p>
   <div class="pjmount"></div></section>
   <section class="sec"><p class="eyebrow">Automation</p><h2>Automation workflows.</h2><p class="sub">GoHighLevel workflows I built to capture and nurture leads, text back missed calls, confirm bookings, recover no-shows and win reviews. Open the folder to see every workflow.</p>${wfFolder()}</section>
   <section class="sec"><p class="eyebrow">Email marketing</p><h2>Email templates.</h2><p class="sub">Responsive, personalised emails I designed and built in GoHighLevel: welcome, newsletter, promotions, quote follow-up and appointment reminders. Open the folder to see each one in full.</p>${emFolder()}</section>
